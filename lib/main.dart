@@ -1,11 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,7 +26,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TimeOfDay _time = TimeOfDay(hour: 0, minute: 0);
-  int _lunch = 0;
+  TimeOfDay _lunch = TimeOfDay(hour: 0, minute: 0);
 
   void _getTime() async {
     TimeOfDay selectedTime = await showTimePicker(
@@ -47,11 +46,33 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Widget _lunchTimePicker() {
+    return CupertinoDatePicker(
+      initialDateTime: DateTime(1969, 1, 1, _lunch.hour, _lunch.minute),
+      onDateTimeChanged: (DateTime value) {
+        setState(() {
+          _lunch = TimeOfDay.fromDateTime(value);
+        });
+      },
+      use24hFormat: true,
+      mode: CupertinoDatePickerMode.time,
+      backgroundColor: CupertinoDynamicColor.resolve(
+          CupertinoColors.systemBackground, context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     TextStyle _textStyle = Theme.of(context).textTheme.display1;
     TimeOfDay arrivalTime = _time;
-    TimeOfDay departureTime = _time.replacing(hour: _time.hour + 8, minute: _time.minute + _lunch);
+    int departureHour = _time.hour + _lunch.hour + 8;
+    int departureMinute = _time.minute + _lunch.minute;
+    int dayOverflow = departureHour ~/ 24;
+    departureHour += departureMinute ~/ 60;
+    departureMinute = departureMinute % 60;
+    departureHour = departureHour % 24;
+    TimeOfDay departureTime =
+        _time.replacing(hour: departureHour, minute: departureMinute);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -68,8 +89,8 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(
-                  MaterialLocalizations.of(context)
-                      .formatTimeOfDay(arrivalTime, alwaysUse24HourFormat: true),
+                  MaterialLocalizations.of(context).formatTimeOfDay(arrivalTime,
+                      alwaysUse24HourFormat: true),
                   style: _textStyle,
                 ),
                 IconButton(
@@ -82,17 +103,37 @@ class _MyHomePageState extends State<MyHomePage> {
               'я потратил на обед',
               style: _textStyle,
             ),
-            TextFormField(
-              keyboardType: TextInputType.number,
-              inputFormatters: [WhitelistingTextInputFormatter(new RegExp('[0-9]+'))],
-              onChanged: (input) => setState(() {
-                if (input != null && input.trim() != '') {
-                  _lunch = num.tryParse(input);
-                }
-              }),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  MaterialLocalizations.of(context).formatTimeOfDay(
+                      TimeOfDay(hour: _lunch.hour, minute: _lunch.minute),
+                      alwaysUse24HourFormat: true),
+                  style: _textStyle,
+                ),
+                IconButton(
+                  icon: Icon(Icons.access_time),
+                  onPressed: () {
+                    showCupertinoModalPopup(
+                        context: context,
+                        builder: (BuildContext builder) {
+                          return Container(
+                            height:
+                                MediaQuery.of(context).copyWith().size.height / 4,
+                            child: _lunchTimePicker(),
+                          );
+                        });
+                  },
+                ),
+              ],
             ),
             Text(
-              'значит уйду в',
+              'значит уйду',
+              style: _textStyle,
+            ),
+            Text(
+              '${dayOverflow > 0 ? '${dayOverflow > 1 ? 'после' : ''}завтра' : ''} в',
               style: _textStyle,
             ),
             Text(
