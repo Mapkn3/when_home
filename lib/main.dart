@@ -63,7 +63,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle _textStyle = Theme.of(context).textTheme.display1;
     TimeOfDay arrivalTime = _time;
     int departureHour = _time.hour + _lunch.hour + 8;
     int departureMinute = _time.minute + _lunch.minute;
@@ -83,7 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Text(
               'я пришёл на работу в',
-              style: _textStyle,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -91,7 +89,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 Text(
                   MaterialLocalizations.of(context).formatTimeOfDay(arrivalTime,
                       alwaysUse24HourFormat: true),
-                  style: _textStyle,
                 ),
                 IconButton(
                   icon: Icon(Icons.access_time),
@@ -101,7 +98,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Text(
               'я потратил на обед',
-              style: _textStyle,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   MaterialLocalizations.of(context).formatTimeOfDay(
                       TimeOfDay(hour: _lunch.hour, minute: _lunch.minute),
                       alwaysUse24HourFormat: true),
-                  style: _textStyle,
                 ),
                 IconButton(
                   icon: Icon(Icons.access_time),
@@ -118,10 +113,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     showCupertinoModalPopup(
                         context: context,
                         builder: (BuildContext builder) {
-                          return Container(
-                            height:
-                                MediaQuery.of(context).copyWith().size.height / 4,
-                            child: _lunchTimePicker(),
+                          return Column(
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  CupertinoNavigationBarBackButton(),
+                                  CupertinoButton(
+                                      child: Text('OK'), onPressed: null)
+                                ],
+                              ),
+                              Container(
+                                height: MediaQuery.of(context)
+                                        .copyWith()
+                                        .size
+                                        .height /
+                                    4,
+                                child: _lunchTimePicker(),
+                              ),
+                            ],
                           );
                         });
                   },
@@ -129,17 +138,12 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
             Text(
-              'значит уйду',
-              style: _textStyle,
-            ),
-            Text(
-              '${dayOverflow > 0 ? '${dayOverflow > 1 ? 'после' : ''}завтра' : ''} в',
-              style: _textStyle,
+              'значит уйду ${dayOverflow > 0 ? '${dayOverflow > 1 ? 'после' : ''}завтра' : ''} в',
+              softWrap: true,
             ),
             Text(
               MaterialLocalizations.of(context)
                   .formatTimeOfDay(departureTime, alwaysUse24HourFormat: true),
-              style: _textStyle,
             ),
           ],
         ),
