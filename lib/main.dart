@@ -117,7 +117,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: <Widget>[
                               Row(
                                 children: <Widget>[
-                                  CupertinoNavigationBarBackButton(),
+                                  CupertinoButton(
+                                      child: Text('Cancel'), onPressed: null),
                                   CupertinoButton(
                                       child: Text('OK'), onPressed: null)
                                 ],
