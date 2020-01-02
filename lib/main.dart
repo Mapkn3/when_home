@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyApp());
 
@@ -97,9 +98,50 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<bool> checkIsLunchStartToday() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    DateTime startLunchTime =
+        DateTime.tryParse(prefs.getString('startLunchTime'));
+    DateTime now = DateTime.now();
+    return now.year == startLunchTime.year &&
+        now.month == startLunchTime.month &&
+        now.day == startLunchTime.day;
+  }
+
+  void updateLunchTimeIfPossible() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    DateTime startLunchTime =
+        DateTime.tryParse(prefs.getString('startLunchTime'));
+    DateTime endLunchTime = DateTime.tryParse(prefs.getString('endLunchTime'));
+    if (startLunchTime != null &&
+        endLunchTime != null &&
+        startLunchTime.isBefore(endLunchTime)) {
+      Duration lunchTime = endLunchTime.difference(startLunchTime);
+      if (lunchTime.inDays == 0) {
+        int lunchHour = lunchTime.inHours;
+        int lunchMinute = lunchTime.inMinutes % 60;
+        setState(() {
+          _lunch = TimeOfDay(hour: lunchHour, minute: lunchMinute);
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    checkIsLunchStartToday().then((bool isToday) {
+      if (isToday) {
+        updateLunchTimeIfPossible();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.display1;
+    TextStyle buttonTextStyle =
+        Theme.of(context).textTheme.button.copyWith(fontSize: 16);
     int departureHour = _time.hour + _lunch.hour + _workDayDuration.hour;
     int departureMinute =
         _time.minute + _lunch.minute + _workDayDuration.minute;
@@ -128,7 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                     const PopupMenuItem(
                         value: '_PopupMenuItem_SetWorkDayDuration',
-                        child: Text('Set work day duration'))
+                        child: Text('Длительность рабочего дня'))
                   ]),
         ],
       ),
@@ -162,15 +204,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Spacer(),
                 Text('обед занял'),
-                Container(
+                /*Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.0),
                   decoration: BoxDecoration(
                       border: Border(
                           bottom: BorderSide(color: mainTextStyle.color))),
                   child: GestureDetector(
-                    child: Text(
-                        formatTimeOfDay(context, _lunch)
-                    ),
+                    child: Text(formatTimeOfDay(context, _lunch)),
                     onTap: () {
                       _getTime(_lunch).then((TimeOfDay time) {
                         setState(() {
@@ -180,6 +220,97 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                 ),
+                Container(
+                  width: MediaQuery.of(context).copyWith().size.width * 0.75,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                            child: OutlineButton(
+                                child: Text('Ушёл на обед',
+                                    textAlign: TextAlign.center,
+                                    style: buttonTextStyle),
+                                onPressed: () async {
+                                  DateTime startLunchTime = DateTime.now();
+                                  SharedPreferences prefs =
+                                      await SharedPreferences.getInstance();
+                                  prefs.setString('startLunchTime',
+                                      startLunchTime.toString());
+                                  updateLunchTimeIfPossible();
+                                })),
+                        Expanded(
+                            child: OutlineButton(
+                                child: Text('Пришёл с обеда',
+                                    textAlign: TextAlign.center,
+                                    style: buttonTextStyle),
+                                onPressed: () async {
+                                  DateTime endLunchTime = DateTime.now();
+                                  SharedPreferences prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setString(
+                                      'endLunchTime', endLunchTime.toString());
+                                  updateLunchTimeIfPossible();
+                                })),
+                    ],
+                  ),
+                ),*/
+                Container(
+                    width: MediaQuery
+                        .of(context)
+                        .copyWith()
+                        .size
+                        .width * 0.9,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Expanded(
+                            child: OutlineButton(
+                                child: Text('Ушёл на обед',
+                                    textAlign: TextAlign.center,
+                                    style: buttonTextStyle),
+                                onPressed: () async {
+                                  DateTime startLunchTime = DateTime.now();
+                                  SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                                  prefs.setString('startLunchTime',
+                                      startLunchTime.toString());
+                                  updateLunchTimeIfPossible();
+                                })),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10.0),
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: mainTextStyle.color))),
+                            child: GestureDetector(
+                              child: Text(formatTimeOfDay(context, _lunch)),
+                              onTap: () {
+                                _getTime(_lunch).then((TimeOfDay time) {
+                                  setState(() {
+                                    _lunch = time;
+                                  });
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                            child: OutlineButton(
+                                child: Text('Пришёл с обеда',
+                                    textAlign: TextAlign.center,
+                                    style: buttonTextStyle),
+                                onPressed: () async {
+                                  DateTime endLunchTime = DateTime.now();
+                                  SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                                  await prefs.setString(
+                                      'endLunchTime', endLunchTime.toString());
+                                  updateLunchTimeIfPossible();
+                                })),
+                      ],
+                    )),
                 Spacer(flex: 2),
                 Text(
                     'можно уйти ${dayOverflow > 0 ? '${'после' *
