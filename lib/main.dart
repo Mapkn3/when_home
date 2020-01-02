@@ -10,8 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: true,
       title: 'When home',
-      theme: ThemeData.dark(),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
       home: MyHomePage(title: 'Home Page'),
     );
   }
@@ -29,6 +32,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TimeOfDay _time = TimeOfDay(hour: 0, minute: 0);
   TimeOfDay _lunch = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay _workDayDuration = TimeOfDay(hour: 8, minute: 0);
+
+  String formatTimeOfDay(BuildContext context, TimeOfDay time) {
+    return MaterialLocalizations.of(context)
+        .formatTimeOfDay(time, alwaysUse24HourFormat: true);
+  }
 
   Future<TimeOfDay> _getTime(TimeOfDay initTime) async {
     TimeOfDay time = initTime;
@@ -91,9 +100,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.display1;
-    int workDayLength = 8;
-    int departureHour = _time.hour + _lunch.hour + workDayLength;
-    int departureMinute = _time.minute + _lunch.minute;
+    int departureHour = _time.hour + _lunch.hour + _workDayDuration.hour;
+    int departureMinute =
+        _time.minute + _lunch.minute + _workDayDuration.minute;
     int dayOverflow = departureHour ~/ 24;
     departureHour += departureMinute ~/ 60;
     departureMinute = departureMinute % 60;
@@ -103,6 +112,25 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: <Widget>[
+          PopupMenuButton<String>(
+              onSelected: (String result) {
+                switch (result) {
+                  case '_PopupMenuItem_SetWorkDayDuration':
+                    _getTime(_workDayDuration).then((TimeOfDay time) {
+                      setState(() {
+                        _workDayDuration = time;
+                      });
+                    });
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem(
+                        value: '_PopupMenuItem_SetWorkDayDuration',
+                        child: Text('Set work day duration'))
+                  ]),
+        ],
       ),
       body: DefaultTextStyle(
           style: mainTextStyle,
@@ -121,8 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           bottom: BorderSide(color: mainTextStyle.color))),
                   child: GestureDetector(
                     child: Text(
-                      MaterialLocalizations.of(context)
-                          .formatTimeOfDay(_time, alwaysUse24HourFormat: true),
+                      formatTimeOfDay(context, _time),
                     ),
                     onTap: () {
                       _getTime(_time).then((TimeOfDay time) {
@@ -142,8 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           bottom: BorderSide(color: mainTextStyle.color))),
                   child: GestureDetector(
                     child: Text(
-                      MaterialLocalizations.of(context)
-                          .formatTimeOfDay(_lunch, alwaysUse24HourFormat: true),
+                        formatTimeOfDay(context, _lunch)
                     ),
                     onTap: () {
                       _getTime(_lunch).then((TimeOfDay time) {
@@ -156,7 +182,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Spacer(flex: 2),
                 Text(
-                    'можно уйти ${dayOverflow > 0 ? '${dayOverflow > 1 ? 'после' : ''}завтра' : ''} в ${MaterialLocalizations.of(context).formatTimeOfDay(departureTime, alwaysUse24HourFormat: true)}'),
+                    'можно уйти ${dayOverflow > 0 ? '${'после' *
+                        (dayOverflow - 1)}завтра' : ''} в ${formatTimeOfDay(
+                        context, departureTime)}'),
                 Spacer(flex: 5),
               ],
             ),
