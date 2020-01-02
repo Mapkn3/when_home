@@ -90,20 +90,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    int departureHour = _time.hour + _lunch.hour + 8;
+    TextStyle mainTextStyle = Theme.of(context).textTheme.display1;
+    int workDayLength = 8;
+    int departureHour = _time.hour + _lunch.hour + workDayLength;
     int departureMinute = _time.minute + _lunch.minute;
     int dayOverflow = departureHour ~/ 24;
     departureHour += departureMinute ~/ 60;
     departureMinute = departureMinute % 60;
     departureHour = departureHour % 24;
     TimeOfDay departureTime =
-        _time.replacing(hour: departureHour, minute: departureMinute);
+        TimeOfDay(hour: departureHour, minute: departureMinute);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: DefaultTextStyle(
-          style: Theme.of(context).textTheme.display1,
+          style: mainTextStyle,
           textAlign: TextAlign.center,
           softWrap: true,
           child: Center(
@@ -112,35 +114,47 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 Spacer(flex: 5),
                 Text('прибыл на работу'),
-                GestureDetector(
-                  child: Text(
-                    MaterialLocalizations.of(context)
-                        .formatTimeOfDay(_time, alwaysUse24HourFormat: true),
-                  ),
-                  onTap: () {
-                    _getTime(_time).then((TimeOfDay time) {
-                      setState(() {
-                        _time = time;
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: mainTextStyle.color))),
+                  child: GestureDetector(
+                    child: Text(
+                      MaterialLocalizations.of(context)
+                          .formatTimeOfDay(_time, alwaysUse24HourFormat: true),
+                    ),
+                    onTap: () {
+                      _getTime(_time).then((TimeOfDay time) {
+                        setState(() {
+                          _time = time;
+                        });
                       });
-                    });
-                  },
+                    },
+                  ),
                 ),
                 Spacer(),
                 Text('обед занял'),
-                GestureDetector(
-                  child: Text(
-                    MaterialLocalizations.of(context)
-                        .formatTimeOfDay(_lunch, alwaysUse24HourFormat: true),
-                  ),
-                  onTap: () {
-                    _getTime(_lunch).then((TimeOfDay time) {
-                      setState(() {
-                        _lunch = time;
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: mainTextStyle.color))),
+                  child: GestureDetector(
+                    child: Text(
+                      MaterialLocalizations.of(context)
+                          .formatTimeOfDay(_lunch, alwaysUse24HourFormat: true),
+                    ),
+                    onTap: () {
+                      _getTime(_lunch).then((TimeOfDay time) {
+                        setState(() {
+                          _lunch = time;
+                        });
                       });
-                    });
-                  },
+                    },
+                  ),
                 ),
-                Spacer(),
+                Spacer(flex: 2),
                 Text(
                     'можно уйти ${dayOverflow > 0 ? '${dayOverflow > 1 ? 'после' : ''}завтра' : ''} в ${MaterialLocalizations.of(context).formatTimeOfDay(departureTime, alwaysUse24HourFormat: true)}'),
                 Spacer(flex: 5),
