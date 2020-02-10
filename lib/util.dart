@@ -6,6 +6,17 @@ String formatTimeOfDay(BuildContext context, TimeOfDay time) {
       .formatTimeOfDay(time, alwaysUse24HourFormat: true);
 }
 
+String formatDateTime(BuildContext context, DateTime date) {
+  return formatTimeOfDay(context, TimeOfDay.fromDateTime(date));
+}
+
+String formatDuration(Duration duration) {
+  int days = duration.inDays;
+  String hours = duration.inHours.remainder(24).toString().padLeft(2, '0');
+  String minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  return '${days > 0 ? '${duration.inDays} д. ' : ''}$hours:$minutes';
+}
+
 Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
     {TimeOfDay initTime}) async {
   TimeOfDay time = initTime ?? TimeOfDay.now();

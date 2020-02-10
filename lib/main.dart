@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:when_home/model.dart';
 
 import 'util.dart';
 
@@ -29,64 +33,82 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  TimeOfDay _time = TimeOfDay(hour: 0, minute: 0);
-  TimeOfDay _lunch = TimeOfDay(hour: 0, minute: 0);
-  TimeOfDay _workDayDuration = TimeOfDay(hour: 8, minute: 0);
+  Timesheet timesheet;
   bool isWork = true;
 
-  Future<bool> checkIsLunchStartToday() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    DateTime startLunchTime =
-        DateTime.tryParse(prefs.getString('startLunchTime'));
-    DateTime now = DateTime.now();
-    return now.year == startLunchTime.year &&
-        now.month == startLunchTime.month &&
-        now.day == startLunchTime.day;
+  Future<SharedPreferences> getPrefs() {
+    return SharedPreferences.getInstance();
   }
 
-  void updateLunchTimeIfPossible() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    DateTime startLunchTime =
-        DateTime.tryParse(prefs.getString('startLunchTime'));
-    DateTime endLunchTime = DateTime.tryParse(prefs.getString('endLunchTime'));
-    if (startLunchTime != null &&
-        endLunchTime != null &&
-        startLunchTime.isBefore(endLunchTime)) {
-      Duration lunchTime = endLunchTime.difference(startLunchTime);
-      if (lunchTime.inDays == 0) {
-        int lunchHour = lunchTime.inHours;
-        int lunchMinute = lunchTime.inMinutes % 60;
-        setState(() {
-          _lunch = TimeOfDay(hour: lunchHour, minute: lunchMinute);
-        });
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    checkIsLunchStartToday().then((bool isToday) {
-      if (isToday) {
-        updateLunchTimeIfPossible();
-      }
+  Future<Timesheet> loadTimesheet() {
+    return getPrefs().then((prefs) {
+      DateTime date = DateTime.now();
+      DateTime defaultArrivalTime = DateTime(date.year, date.month, date.day, 0, 0);
+      String timesheetJson = prefs.getString('timesheet') ??
+      '''{
+        "workDuration": ${Duration(hours: 8).inMilliseconds},
+        "arrivalTime": "${defaultArrivalTime.toString()}",
+        "lunchTimes": []
+      }''';
+      Map timesheetMap = jsonDecode(timesheetJson);
+      timesheet = Timesheet.fromJson(timesheetMap);      
+      return Future.value(timesheet);
     });
   }
+
+  void saveTimesheet() {
+    getPrefs().then((prefs) {
+      prefs.setString('timesheet', jsonEncode(timesheet));
+    });
+  }
+
+  // Future<bool> checkIsLunchStartToday() async {
+  //   DateTime startLunchTime =
+  //       DateTime.tryParse(prefs.getString('startLunchTime'));
+  //   DateTime now = DateTime.now();
+  //   return now.year == startLunchTime.year &&
+  //       now.month == startLunchTime.month &&
+  //       now.day == startLunchTime.day;
+  // }
+
+  // void updateLunchTimeIfPossible() async {
+  //   DateTime startLunchTime =
+  //       DateTime.tryParse(prefs.getString('startLunchTime'));
+  //   DateTime endLunchTime = DateTime.tryParse(prefs.getString('endLunchTime'));
+  //   if (startLunchTime != null &&
+  //       endLunchTime != null &&
+  //       startLunchTime.isBefore(endLunchTime)) {
+  //     Duration lunchTime = endLunchTime.difference(startLunchTime);
+  //     if (lunchTime.inDays == 0) {
+  //       int lunchHour = lunchTime.inHours;
+  //       int lunchMinute = lunchTime.inMinutes % 60;
+  //       setState(() {
+  //         _lunch = TimeOfDay(hour: lunchHour, minute: lunchMinute);
+  //       });
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.display1;
     TextStyle buttonTextStyle =
         Theme.of(context).textTheme.button.copyWith(fontSize: 16);
-    int departureHour = _time.hour + _lunch.hour + _workDayDuration.hour;
-    int departureMinute =
-        _time.minute + _lunch.minute + _workDayDuration.minute;
-    int dayOverflow = departureHour ~/ 24;
-    departureHour += departureMinute ~/ 60;
-    departureMinute = departureMinute % 60;
-    departureHour = departureHour % 24;
-    TimeOfDay departureTime =
-        TimeOfDay(hour: departureHour, minute: departureMinute);
+    String timesheetJson = '''
+    {
+      "workDuration": ${Duration(hours: 8).inMilliseconds},
+      "arrivalTime": "${DateTime(1970).toString()}",
+      "lunchTimes": []
+    }''';
+    Map timesheetMap = jsonDecode(timesheetJson);
+    timesheet = Timesheet.fromJson(timesheetMap);
+    DateTime departureDateTime = timesheet.arrivalTime.add(timesheet.getTotalLunchTime());
+    int dayOverflow = departureDateTime.difference(timesheet.arrivalTime).inDays;
+    loadTimesheet().then((x) {
+      setState(() {
+        timesheet = x;
+      });
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -97,32 +119,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 switch (result) {
                   case '_PopupMenuItem_SetWorkDayDuration':
                     getTimeFromModalBottomSheet(context,
-                        initTime: _workDayDuration)
+                            initTime: TimeOfDay(
+                                hour: timesheet.workDuration.inHours,
+                                minute: timesheet.workDuration.inMinutes))
                         .then((TimeOfDay time) {
                       setState(() {
-                        _workDayDuration = time;
+                        timesheet.workDuration =
+                            Duration(hours: time.hour, minutes: time.minute);
+                        saveTimesheet();
                       });
                     });
                     break;
                 }
               },
-              itemBuilder: (BuildContext context) =>
-              <PopupMenuEntry<String>>[
-                const PopupMenuItem(
-                    value: '_PopupMenuItem_SetWorkDayDuration',
-                    child: Text('Длительность рабочего дня'))
-              ]),
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem(
+                        value: '_PopupMenuItem_SetWorkDayDuration',
+                        child: Text('Длительность рабочего дня'))
+                  ]),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
           label: Text(isWork ? 'На перерыв' : 'К работе'),
           icon: Icon(isWork ? Icons.free_breakfast : Icons.work),
           onPressed: () async {
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            DateTime time = DateTime.now();
-            prefs.setString(
-                isWork ? 'startLunchTime' : 'endLunchTime', time.toString());
-            updateLunchTimeIfPossible();
+            if (isWork) {
+              timesheet.startLunch();
+            } else {
+              timesheet.endLunch();
+            }
+            saveTimesheet();
             setState(() {
               isWork = !isWork;
             });
@@ -144,15 +170,23 @@ class _MyHomePageState extends State<MyHomePage> {
                           bottom: BorderSide(color: mainTextStyle.color))),
                   child: GestureDetector(
                     child: Text(
-                      formatTimeOfDay(context, _time),
+                      formatDateTime(context, timesheet.arrivalTime),
                     ),
                     onTap: () {
-                      getTimeFromModalBottomSheet(context, initTime: _time)
-                          .then((TimeOfDay time) {
-                        setState(() {
-                          _time = time;
-                        });
-                      });
+                      getTimeFromModalBottomSheet(context,
+                              initTime:
+                                  TimeOfDay.fromDateTime(timesheet.arrivalTime))
+                          .then((TimeOfDay time) => setState(() {
+                                DateTime date = DateTime.now();
+                                DateTime arrivalTime = DateTime(
+                                    date.year,
+                                    date.month,
+                                    date.day,
+                                    time.hour,
+                                    time.minute);
+                                timesheet.arrivalTime = arrivalTime;
+                                saveTimesheet();
+                              }));
                     },
                   ),
                 ),
@@ -164,22 +198,33 @@ class _MyHomePageState extends State<MyHomePage> {
                       border: Border(
                           bottom: BorderSide(color: mainTextStyle.color))),
                   child: GestureDetector(
-                    child: Text(formatTimeOfDay(context, _lunch)),
+                    child: Text(formatDuration(timesheet.getTotalLunchTime())),
                     onTap: () {
-                      getTimeFromModalBottomSheet(context, initTime: _lunch)
+                      getTimeFromModalBottomSheet(context,
+                              initTime: TimeOfDay(hour: 0, minute: 0))
                           .then((TimeOfDay time) {
                         setState(() {
-                          _lunch = time;
+                          timesheet.addLunch(
+                              Duration(hours: time.hour, minutes: time.minute));
+                          saveTimesheet();
                         });
                       });
                     },
                     onLongPress: () async {
-                      SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                      var startLunchTime =
-                          prefs.getString('startLunchTime') ?? '00:00';
-                      var endLunchTime =
-                          prefs.getString('endLunchTime') ?? '00:00';
+                      var startLunchTime = '00:00';
+                      var endLunchTime = '00:00';
+                      if (timesheet.lunchTimes.length > 0) {
+                        if (timesheet.lastLunchStartTime != null) {
+                          startLunchTime =
+                              timesheet.lunchTimes.last.item1.toString();
+                          endLunchTime =
+                              timesheet.lunchTimes.last.item2.toString();
+                        } else {
+                          startLunchTime =
+                              timesheet.lastLunchStartTime.toString();
+                          endLunchTime = '-';
+                        }
+                      }
                       showModalBottomSheet<String>(
                           context: context,
                           builder: (BuildContext builder) {
@@ -193,31 +238,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                             child: Text('На перерыв',
                                                 textAlign: TextAlign.center,
                                                 style: buttonTextStyle),
-                                            onPressed: () async {
-                                              DateTime startLunchTime =
-                                              DateTime.now();
-                                              SharedPreferences prefs =
-                                              await SharedPreferences
-                                                  .getInstance();
-                                              prefs.setString('startLunchTime',
-                                                  startLunchTime.toString());
-                                              updateLunchTimeIfPossible();
+                                            onPressed: () {
+                                              timesheet.startLunch();
+                                              saveTimesheet();
                                             })),
                                     Expanded(
                                         child: RaisedButton(
                                             child: Text('К работе',
                                                 textAlign: TextAlign.center,
                                                 style: buttonTextStyle),
-                                            onPressed: () async {
-                                              DateTime endLunchTime =
-                                              DateTime.now();
-                                              SharedPreferences prefs =
-                                              await SharedPreferences
-                                                  .getInstance();
-                                              await prefs.setString(
-                                                  'endLunchTime',
-                                                  endLunchTime.toString());
-                                              updateLunchTimeIfPossible();
+                                            onPressed: () {
+                                              timesheet.endLunch();
+                                              saveTimesheet();
                                             })),
                                   ],
                                 ),
@@ -232,10 +264,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Spacer(flex: 2),
+                Text('text' * -1),
                 Text(
-                    'можно уйти ${dayOverflow > 0 ? '${'после' *
-                        (dayOverflow - 1)}завтра' : ''} в ${formatTimeOfDay(
-                        context, departureTime)}'),
+                    'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${formatDateTime(context, departureDateTime)}'),
                 Spacer(flex: 5),
               ],
             ),
