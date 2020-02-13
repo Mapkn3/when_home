@@ -12,8 +12,9 @@ class Timesheet {
 
   Duration getTotalLunchTime() {
     Duration lunchTime = Duration.zero;
-    lunchTimes.map((pair) => pair.item2.difference(pair.item1))
-        .forEach((time) => lunchTime + time);
+    lunchTimes
+        .map((pair) => pair.item2.difference(pair.item1))
+        .forEach((time) => lunchTime += time);
     return lunchTime;
   }
 
@@ -28,24 +29,29 @@ class Timesheet {
   }
 
   void endLunch() {
-    DateTime now = DateTime.now();
-    lunchTimes.add(Tuple2(now, lastLunchStartTime));
-    lastLunchStartTime = null;
+    if (lastLunchStartTime != null) {
+      DateTime now = DateTime.now();
+      lunchTimes.add(Tuple2(lastLunchStartTime, now));
+      lastLunchStartTime = null;
+    }
   }
 
   factory Timesheet.fromJson(Map<String, dynamic> json) {
     List<Tuple2<DateTime, DateTime>> lunches = [];
-    json['lunchTimes'].forEach((str) {
-      List<DateTime> times = str.split('`~`').map((s) => DateTime.tryParse(s)).toList();
+    new List<String>.from(json['lunchTimes']).forEach((str) {
+      List<DateTime> times = str.split('~')
+          .map((s) => DateTime.tryParse(s))
+          .toList(growable: false);
       lunches.add(new Tuple2<DateTime, DateTime>(times[0], times[1]));
     });
     Timesheet timesheet = Timesheet(
-      workDuration: Duration(milliseconds: json['workDuration']),
-      arrivalTime: DateTime.tryParse(json['arrivalTime']),
-      lunchTimes: lunches
+        workDuration: Duration(milliseconds: json['workDuration']),
+        arrivalTime: DateTime.tryParse(json['arrivalTime']),
+        lunchTimes: lunches
     );
     if (json['lastLunchStartTime'] != null) {
-      timesheet.lastLunchStartTime = DateTime.tryParse(json['lastLunchStartTime']);
+      timesheet.lastLunchStartTime =
+          DateTime.tryParse(json['lastLunchStartTime']);
     }
     return timesheet;
   }

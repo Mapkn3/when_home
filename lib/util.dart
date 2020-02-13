@@ -20,7 +20,7 @@ String formatDuration(Duration duration) {
 Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
     {TimeOfDay initTime}) async {
   TimeOfDay time = initTime ?? TimeOfDay.now();
-  String result = await showModalBottomSheet<String>(
+  String result = await showCupertinoModalPopup(
       context: context,
       builder: (BuildContext builder) {
         return Column(
@@ -28,24 +28,14 @@ Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
           children: <Widget>[
             Row(
               children: <Widget>[
-                Expanded(
-                    child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 1.0, horizontal: 4.0),
-                        child: OutlineButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.pop(context, '_getTime_cancel');
-                            }))),
-                Expanded(
-                    child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 1.0, horizontal: 4.0),
-                        child: OutlineButton(
-                            child: Text('OK'),
-                            onPressed: () {
-                              Navigator.pop(context, '_getTime_ok');
-                            })))
+                CupertinoButton(
+                    child: Text('Cancel'),
+                    onPressed: () => Navigator.pop(context, '_getTime_cancel')),
+                Spacer(),
+                CupertinoButton(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.pop(context, '_getTime_ok'),
+                ),
               ],
             ),
             Container(

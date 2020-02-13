@@ -2,12 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:when_home/model.dart';
 
 import 'util.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  GetIt.I.registerSingleton<SharedPreferences>(
+      await SharedPreferences.getInstance());
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -35,80 +42,36 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Timesheet timesheet;
   bool isWork = true;
+  SharedPreferences prefs = GetIt.I.get<SharedPreferences>();
 
-  Future<SharedPreferences> getPrefs() {
-    return SharedPreferences.getInstance();
-  }
-
-  Future<Timesheet> loadTimesheet() {
-    return getPrefs().then((prefs) {
-      DateTime date = DateTime.now();
-      DateTime defaultArrivalTime = DateTime(date.year, date.month, date.day, 0, 0);
-      String timesheetJson = prefs.getString('timesheet') ??
-      '''{
+  void loadTimesheet() {
+    DateTime date = DateTime.now();
+    DateTime defaultArrivalTime = DateTime(date.year, date.month, date.day);
+    String timesheetJson = prefs.getString('timesheet') ??
+        '''{
         "workDuration": ${Duration(hours: 8).inMilliseconds},
         "arrivalTime": "${defaultArrivalTime.toString()}",
         "lunchTimes": []
       }''';
-      Map timesheetMap = jsonDecode(timesheetJson);
-      timesheet = Timesheet.fromJson(timesheetMap);      
-      return Future.value(timesheet);
-    });
+    Map timesheetMap = jsonDecode(timesheetJson);
+    timesheet = Timesheet.fromJson(timesheetMap);
   }
 
   void saveTimesheet() {
-    getPrefs().then((prefs) {
-      prefs.setString('timesheet', jsonEncode(timesheet));
-    });
+    prefs.setString('timesheet', jsonEncode(timesheet));
   }
-
-  // Future<bool> checkIsLunchStartToday() async {
-  //   DateTime startLunchTime =
-  //       DateTime.tryParse(prefs.getString('startLunchTime'));
-  //   DateTime now = DateTime.now();
-  //   return now.year == startLunchTime.year &&
-  //       now.month == startLunchTime.month &&
-  //       now.day == startLunchTime.day;
-  // }
-
-  // void updateLunchTimeIfPossible() async {
-  //   DateTime startLunchTime =
-  //       DateTime.tryParse(prefs.getString('startLunchTime'));
-  //   DateTime endLunchTime = DateTime.tryParse(prefs.getString('endLunchTime'));
-  //   if (startLunchTime != null &&
-  //       endLunchTime != null &&
-  //       startLunchTime.isBefore(endLunchTime)) {
-  //     Duration lunchTime = endLunchTime.difference(startLunchTime);
-  //     if (lunchTime.inDays == 0) {
-  //       int lunchHour = lunchTime.inHours;
-  //       int lunchMinute = lunchTime.inMinutes % 60;
-  //       setState(() {
-  //         _lunch = TimeOfDay(hour: lunchHour, minute: lunchMinute);
-  //       });
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.display1;
     TextStyle buttonTextStyle =
         Theme.of(context).textTheme.button.copyWith(fontSize: 16);
-    String timesheetJson = '''
-    {
-      "workDuration": ${Duration(hours: 8).inMilliseconds},
-      "arrivalTime": "${DateTime(1970).toString()}",
-      "lunchTimes": []
-    }''';
-    Map timesheetMap = jsonDecode(timesheetJson);
-    timesheet = Timesheet.fromJson(timesheetMap);
-    DateTime departureDateTime = timesheet.arrivalTime.add(timesheet.getTotalLunchTime());
-    int dayOverflow = departureDateTime.difference(timesheet.arrivalTime).inDays;
-    loadTimesheet().then((x) {
-      setState(() {
-        timesheet = x;
-      });
-    });
+    loadTimesheet();
+
+    DateTime departureDateTime =
+        timesheet.arrivalTime.add(timesheet.getTotalLunchTime());
+    int dayOverflow =
+        departureDateTime.difference(timesheet.arrivalTime).inDays;
 
     return Scaffold(
       appBar: AppBar(
@@ -238,19 +201,21 @@ class _MyHomePageState extends State<MyHomePage> {
                                             child: Text('На перерыв',
                                                 textAlign: TextAlign.center,
                                                 style: buttonTextStyle),
-                                            onPressed: () {
-                                              timesheet.startLunch();
-                                              saveTimesheet();
-                                            })),
+                                            onPressed: () =>
+                                                setState(() {
+                                                  timesheet.startLunch();
+                                                  saveTimesheet();
+                                                }))),
                                     Expanded(
                                         child: RaisedButton(
                                             child: Text('К работе',
                                                 textAlign: TextAlign.center,
                                                 style: buttonTextStyle),
-                                            onPressed: () {
-                                              timesheet.endLunch();
-                                              saveTimesheet();
-                                            })),
+                                            onPressed: () =>
+                                                setState(() {
+                                                  timesheet.endLunch();
+                                                  saveTimesheet();
+                                                }))),
                                   ],
                                 ),
                                 Text(
