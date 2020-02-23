@@ -17,10 +17,16 @@ String formatDuration(Duration duration) {
   return '${days > 0 ? '${duration.inDays} д. ' : ''}$hours:$minutes';
 }
 
+Duration toDuration(TimeOfDay timeOfDay) =>
+    Duration(hours: timeOfDay.hour, minutes: timeOfDay.minute);
+
+TimeOfDay toTimeOfDay(Duration duration) =>
+    TimeOfDay(hour: duration.inHours % 24, minute: duration.inMinutes % 60);
+
 Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
     {TimeOfDay initTime}) async {
   TimeOfDay time = initTime ?? TimeOfDay.now();
-  String result = await showCupertinoModalPopup(
+  String result = await showModalBottomSheet(
       context: context,
       builder: (BuildContext builder) {
         return Column(
@@ -28,11 +34,11 @@ Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
           children: <Widget>[
             Row(
               children: <Widget>[
-                CupertinoButton(
+                CupertinoButton.filled(
                     child: Text('Cancel'),
                     onPressed: () => Navigator.pop(context, '_getTime_cancel')),
                 Spacer(),
-                CupertinoButton(
+                CupertinoButton.filled(
                   child: Text('OK'),
                   onPressed: () => Navigator.pop(context, '_getTime_ok'),
                 ),
