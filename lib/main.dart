@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:when_home/model.dart';
+import 'package:when_home/timesheet.dart';
 
 import 'util.dart';
 
