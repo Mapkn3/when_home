@@ -11,7 +11,7 @@ class Timesheet {
   Duration getTotalLunchTime() {
     Duration lunchTime = Duration.zero;
     lunchTimes
-        ?.map((interval) => interval.end.difference(interval.begin))
+        ?.map((interval) => interval.duration())
         ?.forEach((time) => lunchTime += time);
     return lunchTime;
   }

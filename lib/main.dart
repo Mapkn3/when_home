@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:when_home/date_time_interval.dart';
 import 'package:when_home/timesheet.dart';
 
 import 'util.dart';
@@ -96,6 +97,61 @@ class _MyHomePageState extends State<MyHomePage> {
             ]);
   }
 
+  ListTile buildListTile(DateTimeInterval interval) {
+    Widget title = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+            child: Container(
+              alignment: Alignment.centerRight,
+              child: Text('${getTimeWithShortDateOfDateTime(interval.begin)}'),
+            ),
+            flex: 2),
+        Expanded(
+            child: Container(
+          alignment: Alignment.center,
+          child: Text('-'),
+        )),
+        Expanded(
+            child: Container(
+              alignment: Alignment.centerLeft,
+              child: Text('${getTimeWithShortDateOfDateTime(interval.end)}'),
+            ),
+            flex: 2),
+      ],
+    );
+    Widget subtitle = Container(
+      alignment: Alignment.center,
+      child: Text('Длительность: ${formatFullDuration(interval.duration())}'),
+    );
+    return ListTile(title: title, subtitle: subtitle);
+  }
+
+  showLunchTimesList() {
+    String lastLunchTime = timesheet.lastLunchStartTime == null
+        ? ''
+        : 'Убыл на перерыв в ${getTimeWithShortDateOfDateTime(timesheet.lastLunchStartTime)}';
+
+    final Iterable<ListTile> items = timesheet.lunchTimes.reversed
+        .map((DateTimeInterval interval) => buildListTile(interval));
+    final List<Widget> divided =
+        ListTile.divideTiles(context: context, tiles: items).toList();
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext builder) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(lastLunchTime),
+              Container(
+                child: ListView(children: divided),
+                height: getQuarterOfScreen(context),
+              )
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.headline;
@@ -136,22 +192,19 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               Spacer(flex: 5),
               Text('прибытие на работу'),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                decoration: BoxDecoration(
-                    border:
-                        Border(bottom: BorderSide(color: mainTextStyle.color))),
+              underlineWidget(
                 child: GestureDetector(
                   child: Text(
                     formatDateTime(context, timesheet.arrivalTime),
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
-                            initTime:
-                                TimeOfDay.fromDateTime(timesheet.arrivalTime))
-                        .then((TimeOfDay time) => setState(() {
-                              DateTime date = DateTime.now();
-                              DateTime arrivalTime = DateTime(date.year,
+                        initTime:
+                        TimeOfDay.fromDateTime(timesheet.arrivalTime))
+                        .then((TimeOfDay time) =>
+                        setState(() {
+                          DateTime date = DateTime.now();
+                          DateTime arrivalTime = DateTime(date.year,
                                   date.month, date.day, time.hour, time.minute);
                               timesheet.arrivalTime = arrivalTime;
                               saveTimesheet();
@@ -161,40 +214,11 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Spacer(),
               Text('перерыв занял'),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                decoration: BoxDecoration(
-                    border:
-                        Border(bottom: BorderSide(color: mainTextStyle.color))),
+              underlineWidget(
                 child: GestureDetector(
-                  child: Text(formatDuration(timesheet.getTotalLunchTime())),
-                  onLongPress: () async {
-                    var startLunchTime = '00:00';
-                    var endLunchTime = '00:00';
-                    if (timesheet.lunchTimes.length > 0) {
-                      if (timesheet.lastLunchStartTime == null) {
-                        startLunchTime = formatDateTime(
-                            context, timesheet.lunchTimes.last.begin);
-                        endLunchTime = formatDateTime(
-                            context, timesheet.lunchTimes.last.end);
-                      } else {
-                        startLunchTime = formatDateTime(
-                            context, timesheet.lastLunchStartTime);
-                        endLunchTime = '-';
-                      }
-                    }
-                    showModalBottomSheet(
-                        context: context,
-                        builder: (BuildContext builder) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Text('Время убытия на перерыв: $startLunchTime'),
-                              Text('Время прибытия с перерыва: $endLunchTime'),
-                            ],
-                          );
-                        });
-                  },
+                  child:
+                  Text(formatFullDuration(timesheet.getTotalLunchTime())),
+                  onLongPress: showLunchTimesList,
                 ),
               ),
               Spacer(flex: 2),
