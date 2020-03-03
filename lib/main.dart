@@ -9,10 +9,10 @@ import 'package:when_home/timesheet.dart';
 
 import 'util.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  GetIt.I.registerSingleton<SharedPreferences>(
-      await SharedPreferences.getInstance());
+  SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  GetIt.I.registerSingleton<SharedPreferences>(sharedPreferences);
 
   runApp(MyApp());
 }
@@ -21,26 +21,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       title: 'When home',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.light,
-      home: MyHomePage(title: 'Home Page'),
+      themeMode: ThemeMode.dark,
+      home: TimesScreen(title: 'Когда домой?'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class TimesScreen extends StatefulWidget {
+  TimesScreen({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _TimesScreenState createState() => _TimesScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _TimesScreenState extends State<TimesScreen> {
   Timesheet timesheet;
   bool isWork = true;
   SharedPreferences prefs = GetIt.I.get<SharedPreferences>();
@@ -128,23 +128,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   showLunchTimesList() {
-    String lastLunchTime = timesheet.lastLunchStartTime == null
-        ? ''
-        : 'Убыл на перерыв в ${getTimeWithShortDateOfDateTime(timesheet.lastLunchStartTime)}';
-
+    bool hasLunchTimes = timesheet.lunchTimes.length > 0;
     final Iterable<ListTile> items = timesheet.lunchTimes.reversed
         .map((DateTimeInterval interval) => buildListTile(interval));
     final List<Widget> divided =
         ListTile.divideTiles(context: context, tiles: items).toList();
+    var content = hasLunchTimes
+        ? ListView(children: divided)
+        : Center(child: Text('Отсутствует информация по перерывам'));
     showModalBottomSheet(
         context: context,
         builder: (BuildContext builder) {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(lastLunchTime),
               Container(
-                child: ListView(children: divided),
+                child: content,
                 height: getQuarterOfScreen(context),
               )
             ],
@@ -192,15 +191,14 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               Spacer(flex: 5),
               Text('прибытие на работу'),
-              underlineWidget(
+              underlineWidget(context,
                 child: GestureDetector(
                   child: Text(
                     formatDateTime(context, timesheet.arrivalTime),
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
-                        initTime:
-                        TimeOfDay.fromDateTime(timesheet.arrivalTime))
+                        initTime: TimeOfDay.fromDateTime(timesheet.arrivalTime))
                         .then((TimeOfDay time) =>
                         setState(() {
                           DateTime date = DateTime.now();
@@ -214,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Spacer(),
               Text('перерыв занял'),
-              underlineWidget(
+              underlineWidget(context,
                 child: GestureDetector(
                   child:
                   Text(formatFullDuration(timesheet.getTotalLunchTime())),

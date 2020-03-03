@@ -74,11 +74,11 @@ Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
           children: <Widget>[
             Row(
               children: <Widget>[
-                CupertinoButton.filled(
+                CupertinoButton(
                     child: Text('Cancel'),
                     onPressed: () => Navigator.pop(context, '_getTime_cancel')),
                 Spacer(),
-                CupertinoButton.filled(
+                CupertinoButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.pop(context, '_getTime_ok'),
                 ),
@@ -112,11 +112,12 @@ Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
   }
 }
 
-Widget underlineWidget({@required Widget child}) =>
+Widget underlineWidget(BuildContext context,
+        {@required Widget child}) =>
     Container(
         padding: EdgeInsets.symmetric(horizontal: 10.0),
         decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.black))
-        ),
-        child: child
-    );
+            border: Border(
+                bottom: BorderSide(
+                    color: Theme.of(context).textTheme.body1.color))),
+        child: child);
