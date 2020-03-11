@@ -23,9 +23,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'When home',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.dark,
       home: TimesScreen(title: 'Когда домой?'),
     );
   }
@@ -194,7 +191,7 @@ class _TimesScreenState extends State<TimesScreen> {
               underlineWidget(context,
                 child: GestureDetector(
                   child: Text(
-                    formatDateTime(context, timesheet.arrivalTime),
+                    getShortTimeWithShortDateOfDateTime(timesheet.arrivalTime),
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
@@ -212,16 +209,17 @@ class _TimesScreenState extends State<TimesScreen> {
               ),
               Spacer(),
               Text('перерыв занял'),
-              underlineWidget(context,
+              underlineWidget(
+                context,
                 child: GestureDetector(
                   child:
-                  Text(formatFullDuration(timesheet.getTotalLunchTime())),
+                      Text(formatFullDuration(timesheet.getTotalLunchTime())),
                   onLongPress: showLunchTimesList,
                 ),
               ),
               Spacer(flex: 2),
               Text(
-                  'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${formatDateTime(context, departureDateTime)}'),
+                  'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${getShortTimeWithShortDateOfDateTime(departureDateTime)}'),
               Spacer(flex: 5),
             ],
           ),

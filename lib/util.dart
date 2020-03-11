@@ -4,27 +4,26 @@ import 'package:flutter/material.dart';
 double getQuarterOfScreen(BuildContext context) =>
     MediaQuery.of(context).copyWith().size.height / 4;
 
-String formatTimeOfDay(BuildContext context, TimeOfDay time) =>
-    MaterialLocalizations.of(context)
-        .formatTimeOfDay(time, alwaysUse24HourFormat: true);
+String getFullDateTime(DateTime date) =>
+    '${getDateOfDateTime(date)} ${getTimeOfDateTime(date)}';
 
-String formatDateTime(BuildContext context, DateTime date) =>
-    formatTimeOfDay(context, TimeOfDay.fromDateTime(date));
-
-String getFullDateTime(DateTime date) {
+String getDateOfDateTime(DateTime date) {
   String year = date.year.toString();
   String month = formatTwoDigitZeroPad(date.month);
   String day = formatTwoDigitZeroPad(date.day);
-  String hour = formatTwoDigitZeroPad(date.hour);
-  String minute = formatTwoDigitZeroPad(date.minute);
-  String second = formatTwoDigitZeroPad(date.second);
-  return '$day.$month.$year $hour:$minute:$second';
+  return '$day.$month.$year';
 }
 
 String getShortDateOfDateTime(DateTime date) {
   String month = formatTwoDigitZeroPad(date.month);
   String day = formatTwoDigitZeroPad(date.day);
   return '$day.$month';
+}
+
+String getShortTimeOfDateTime(DateTime date) {
+  String hour = formatTwoDigitZeroPad(date.hour);
+  String minute = formatTwoDigitZeroPad(date.minute);
+  return '$hour:$minute';
 }
 
 String getTimeOfDateTime(DateTime date) {
@@ -36,6 +35,9 @@ String getTimeOfDateTime(DateTime date) {
 
 String getTimeWithShortDateOfDateTime(DateTime date) =>
     '${getTimeOfDateTime(date)} (${getShortDateOfDateTime(date)})';
+
+String getShortTimeWithShortDateOfDateTime(DateTime date) =>
+    '${getShortTimeOfDateTime(date)} (${getShortDateOfDateTime(date)})';
 
 String formatDuration(Duration duration) {
   int days = duration.inDays;
