@@ -1,43 +1,22 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-double getQuarterOfScreen(BuildContext context) =>
-    MediaQuery.of(context).copyWith().size.height / 4;
+String _datePattern = 'dd.MM.yyyy';
+String _shortDatePattern = 'dd.MM';
+DateFormat date = DateFormat(_datePattern);
+DateFormat shortDate = DateFormat(_shortDatePattern);
+DateFormat time = DateFormat.Hms();
+DateFormat shortTime = DateFormat.Hm();
+DateFormat dateWithTime = date.add_Hms();
+DateFormat timeWithShortDate = time.addPattern('($_shortDatePattern)');
+DateFormat shortTimeWithShortDate =
+    shortTime.addPattern('($_shortDatePattern)');
 
-String getFullDateTime(DateTime date) =>
-    '${getDateOfDateTime(date)} ${getTimeOfDateTime(date)}';
+double getNPartOfScreen(BuildContext context, double part) =>
+    MediaQuery.of(context).copyWith().size.height / part;
 
-String getDateOfDateTime(DateTime date) {
-  String year = date.year.toString();
-  String month = formatTwoDigitZeroPad(date.month);
-  String day = formatTwoDigitZeroPad(date.day);
-  return '$day.$month.$year';
-}
-
-String getShortDateOfDateTime(DateTime date) {
-  String month = formatTwoDigitZeroPad(date.month);
-  String day = formatTwoDigitZeroPad(date.day);
-  return '$day.$month';
-}
-
-String getShortTimeOfDateTime(DateTime date) {
-  String hour = formatTwoDigitZeroPad(date.hour);
-  String minute = formatTwoDigitZeroPad(date.minute);
-  return '$hour:$minute';
-}
-
-String getTimeOfDateTime(DateTime date) {
-  String hour = formatTwoDigitZeroPad(date.hour);
-  String minute = formatTwoDigitZeroPad(date.minute);
-  String second = formatTwoDigitZeroPad(date.second);
-  return '$hour:$minute:$second';
-}
-
-String getTimeWithShortDateOfDateTime(DateTime date) =>
-    '${getTimeOfDateTime(date)} (${getShortDateOfDateTime(date)})';
-
-String getShortTimeWithShortDateOfDateTime(DateTime date) =>
-    '${getShortTimeOfDateTime(date)} (${getShortDateOfDateTime(date)})';
+double getQuarterOfScreen(BuildContext context) => getNPartOfScreen(context, 4);
 
 String formatDuration(Duration duration) {
   int days = duration.inDays;
@@ -59,16 +38,26 @@ String formatTwoDigitZeroPad(int number) {
   return (number < 10) ? '0$number' : '$number';
 }
 
-Duration toDuration(TimeOfDay timeOfDay) =>
-    Duration(hours: timeOfDay.hour, minutes: timeOfDay.minute);
+Duration toDuration(DateTime dateTime) =>
+    Duration(hours: dateTime.hour, minutes: dateTime.minute);
 
-TimeOfDay toTimeOfDay(Duration duration) =>
-    TimeOfDay(hour: duration.inHours % 24, minute: duration.inMinutes % 60);
 
-Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
-    {TimeOfDay initTime}) async {
-  TimeOfDay time = initTime ?? TimeOfDay.now();
-  String result = await showModalBottomSheet(
+DateTime toDateTime(Duration duration) {
+  DateTime now = DateTime.now();
+  return DateTime(now.year, now.month, now.day).add(duration);
+}
+
+Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
+    {DateTime initTime}) async {
+  const ok = '_getTime_ok';
+  const cancel = '_getTime_cancel';
+  DateTime time = initTime ?? DateTime.now();
+  final cupertinoTheme = CupertinoTheme.of(context);
+  final dateTimePickerTextStyle = cupertinoTheme.textTheme.pickerTextStyle
+      .copyWith(fontSize: 18.0, color: Colors.cyan);
+  final textTheme = cupertinoTheme.textTheme.copyWith(
+      dateTimePickerTextStyle: dateTimePickerTextStyle);
+  final result = await showModalBottomSheet(
       context: context,
       builder: (BuildContext builder) {
         return Column(
@@ -78,48 +67,47 @@ Future<TimeOfDay> getTimeFromModalBottomSheet(BuildContext context,
               children: <Widget>[
                 CupertinoButton(
                     child: Text('Cancel'),
-                    onPressed: () => Navigator.pop(context, '_getTime_cancel')),
+                    onPressed: () {
+                      return Navigator.pop(context, cancel);
+                    }
+                ),
                 Spacer(),
                 CupertinoButton(
                   child: Text('OK'),
-                  onPressed: () => Navigator.pop(context, '_getTime_ok'),
+                  onPressed: () => Navigator.pop(context, ok),
                 ),
               ],
             ),
             Container(
               height: getQuarterOfScreen(context),
-              child: CupertinoDatePicker(
-                initialDateTime:
-                DateTime(1969, 1, 1, initTime.hour, initTime.minute),
-                onDateTimeChanged: (DateTime value) {
-                  time = TimeOfDay.fromDateTime(value);
-                },
-                mode: CupertinoDatePickerMode.time,
-                use24hFormat: true,
+              child: CupertinoTheme(
+                  data: cupertinoTheme.copyWith(textTheme: textTheme),
+                  child: CupertinoDatePicker(
+                    backgroundColor: Theme
+                        .of(context)
+                        .scaffoldBackgroundColor,
+                    initialDateTime: initTime,
+                    onDateTimeChanged: (DateTime value) => time = value,
+                    mode: CupertinoDatePickerMode.time,
+                    use24hFormat: true,
+                  )
               ),
             )
           ],
         );
       });
   switch (result) {
-    case '_getTime_ok':
-      {
-        return time;
-      }
-    case '_getTime_cancel':
+    case ok:
+      return time;
+    case cancel:
     default:
-      {
-        return initTime;
-      }
+      return initTime;
   }
 }
 
-Widget underlineWidget(BuildContext context,
-        {@required Widget child}) =>
+Widget underlineWidget(BuildContext context, {@required Widget child}) =>
     Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.0),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                    color: Theme.of(context).textTheme.body1.color))),
+            border: Border(bottom: BorderSide())),
         child: child);

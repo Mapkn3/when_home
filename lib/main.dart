@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'When home',
+      theme: ThemeData.dark(),
       home: TimesScreen(title: 'Когда домой?'),
     );
   }
@@ -77,13 +78,11 @@ class _TimesScreenState extends State<TimesScreen> {
           switch (result) {
             case '_PopupMenuItem_SetWorkDayDuration':
               getTimeFromModalBottomSheet(context,
-                      initTime: toTimeOfDay(timesheet.workDuration))
-                  .then((TimeOfDay time) {
-                setState(() {
-                  timesheet.workDuration = toDuration(time);
-                  saveTimesheet();
-                });
-              });
+                      initTime: toDateTime(timesheet.workDuration))
+                  .then((DateTime time) => setState(() {
+                        timesheet.workDuration = toDuration(time);
+                        saveTimesheet();
+                      }));
               break;
           }
         },
@@ -101,7 +100,7 @@ class _TimesScreenState extends State<TimesScreen> {
         Expanded(
             child: Container(
               alignment: Alignment.centerRight,
-              child: Text('${getTimeWithShortDateOfDateTime(interval.begin)}'),
+              child: Text('${timeWithShortDate.format(interval.begin)}'),
             ),
             flex: 2),
         Expanded(
@@ -112,7 +111,7 @@ class _TimesScreenState extends State<TimesScreen> {
         Expanded(
             child: Container(
               alignment: Alignment.centerLeft,
-              child: Text('${getTimeWithShortDateOfDateTime(interval.end)}'),
+              child: Text('${timeWithShortDate.format(interval.end)}'),
             ),
             flex: 2),
       ],
@@ -191,19 +190,17 @@ class _TimesScreenState extends State<TimesScreen> {
               underlineWidget(context,
                 child: GestureDetector(
                   child: Text(
-                    getShortTimeWithShortDateOfDateTime(timesheet.arrivalTime),
+                    shortTimeWithShortDate.format(timesheet.arrivalTime),
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
-                        initTime: TimeOfDay.fromDateTime(timesheet.arrivalTime))
-                        .then((TimeOfDay time) =>
+                        initTime: timesheet.arrivalTime)
+                        .then((DateTime time) =>
                         setState(() {
-                          DateTime date = DateTime.now();
-                          DateTime arrivalTime = DateTime(date.year,
-                                  date.month, date.day, time.hour, time.minute);
-                              timesheet.arrivalTime = arrivalTime;
-                              saveTimesheet();
-                            }));
+                          DateTime arrivalTime = time;
+                          timesheet.arrivalTime = arrivalTime;
+                          saveTimesheet();
+                        }));
                   },
                 ),
               ),
@@ -213,13 +210,15 @@ class _TimesScreenState extends State<TimesScreen> {
                 context,
                 child: GestureDetector(
                   child:
-                      Text(formatFullDuration(timesheet.getTotalLunchTime())),
+                  Text(formatFullDuration(timesheet.getTotalLunchTime())),
                   onLongPress: showLunchTimesList,
                 ),
               ),
               Spacer(flex: 2),
               Text(
-                  'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${getShortTimeWithShortDateOfDateTime(departureDateTime)}'),
+                  'можно уйти ${dayOverflow > 0 ? '${'после' *
+                      (dayOverflow - 1)}завтра' : ''} в ${shortTimeWithShortDate
+                      .format(departureDateTime)}'),
               Spacer(flex: 5),
             ],
           ),

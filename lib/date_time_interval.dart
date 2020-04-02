@@ -16,5 +16,6 @@ class DateTimeInterval {
       {'begin': begin.toString(), 'end': end.toString()};
 
   @override
-  String toString() => '${getFullDateTime(begin)} - ${getFullDateTime(begin)}';
+  String toString() =>
+      '${dateWithTime.format(begin)} - ${dateWithTime.format(begin)}';
 }
