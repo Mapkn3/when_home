@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'When home',
-      theme: ThemeData.dark(),
       home: TimesScreen(title: 'Когда домой?'),
     );
   }
@@ -187,20 +186,20 @@ class _TimesScreenState extends State<TimesScreen> {
             children: <Widget>[
               Spacer(flex: 5),
               Text('прибытие на работу'),
-              underlineWidget(context,
+              underlineWidget(
+                context,
                 child: GestureDetector(
                   child: Text(
                     shortTimeWithShortDate.format(timesheet.arrivalTime),
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
-                        initTime: timesheet.arrivalTime)
-                        .then((DateTime time) =>
-                        setState(() {
-                          DateTime arrivalTime = time;
-                          timesheet.arrivalTime = arrivalTime;
-                          saveTimesheet();
-                        }));
+                            initTime: timesheet.arrivalTime)
+                        .then((DateTime time) => setState(() {
+                              DateTime arrivalTime = time;
+                              timesheet.arrivalTime = arrivalTime;
+                              saveTimesheet();
+                            }));
                   },
                 ),
               ),
@@ -210,15 +209,13 @@ class _TimesScreenState extends State<TimesScreen> {
                 context,
                 child: GestureDetector(
                   child:
-                  Text(formatFullDuration(timesheet.getTotalLunchTime())),
+                      Text(formatFullDuration(timesheet.getTotalLunchTime())),
                   onLongPress: showLunchTimesList,
                 ),
               ),
               Spacer(flex: 2),
               Text(
-                  'можно уйти ${dayOverflow > 0 ? '${'после' *
-                      (dayOverflow - 1)}завтра' : ''} в ${shortTimeWithShortDate
-                      .format(departureDateTime)}'),
+                  'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${shortTimeWithShortDate.format(departureDateTime)}'),
               Spacer(flex: 5),
             ],
           ),

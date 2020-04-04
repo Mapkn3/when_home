@@ -41,7 +41,6 @@ String formatTwoDigitZeroPad(int number) {
 Duration toDuration(DateTime dateTime) =>
     Duration(hours: dateTime.hour, minutes: dateTime.minute);
 
-
 DateTime toDateTime(Duration duration) {
   DateTime now = DateTime.now();
   return DateTime(now.year, now.month, now.day).add(duration);
@@ -52,11 +51,6 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
   const ok = '_getTime_ok';
   const cancel = '_getTime_cancel';
   DateTime time = initTime ?? DateTime.now();
-  final cupertinoTheme = CupertinoTheme.of(context);
-  final dateTimePickerTextStyle = cupertinoTheme.textTheme.pickerTextStyle
-      .copyWith(fontSize: 18.0, color: Colors.cyan);
-  final textTheme = cupertinoTheme.textTheme.copyWith(
-      dateTimePickerTextStyle: dateTimePickerTextStyle);
   final result = await showModalBottomSheet(
       context: context,
       builder: (BuildContext builder) {
@@ -69,8 +63,7 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
                     child: Text('Cancel'),
                     onPressed: () {
                       return Navigator.pop(context, cancel);
-                    }
-                ),
+                    }),
                 Spacer(),
                 CupertinoButton(
                   child: Text('OK'),
@@ -80,17 +73,12 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
             ),
             Container(
               height: getQuarterOfScreen(context),
-              child: CupertinoTheme(
-                  data: cupertinoTheme.copyWith(textTheme: textTheme),
-                  child: CupertinoDatePicker(
-                    backgroundColor: Theme
-                        .of(context)
-                        .scaffoldBackgroundColor,
-                    initialDateTime: initTime,
-                    onDateTimeChanged: (DateTime value) => time = value,
-                    mode: CupertinoDatePickerMode.time,
-                    use24hFormat: true,
-                  )
+              child: CupertinoDatePicker(
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                initialDateTime: initTime,
+                onDateTimeChanged: (DateTime value) => time = value,
+                mode: CupertinoDatePickerMode.time,
+                use24hFormat: true,
               ),
             )
           ],
@@ -108,6 +96,5 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
 Widget underlineWidget(BuildContext context, {@required Widget child}) =>
     Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-            border: Border(bottom: BorderSide())),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide())),
         child: child);
