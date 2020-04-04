@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,7 +96,7 @@ class _TimesScreenState extends State<TimesScreen> {
             ]);
   }
 
-  ListTile buildListTile(DateTimeInterval interval) {
+  ListTile buildListTile(DateTimeInterval interval, int index) {
     Widget title = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -106,10 +107,11 @@ class _TimesScreenState extends State<TimesScreen> {
             ),
             flex: 2),
         Expanded(
-            child: Container(
-          alignment: Alignment.center,
-          child: Text('-'),
-        )),
+          child: Container(
+            alignment: Alignment.center,
+            child: Text('-'),
+          ),
+        ),
         Expanded(
             child: Container(
               alignment: Alignment.centerLeft,
@@ -122,18 +124,35 @@ class _TimesScreenState extends State<TimesScreen> {
       alignment: Alignment.center,
       child: Text('Длительность: ${formatFullDuration(interval.duration())}'),
     );
-    return ListTile(title: title, subtitle: subtitle);
+    Widget trailing = GestureDetector(
+      child: Icon(Icons.delete),
+      onTap: () => setState(() {
+        timesheet.lunchTimes.removeAt(index);
+        saveTimesheet();
+        Navigator.pop(context);
+        showLunchTimesList();
+      }),
+    );
+    return ListTile(
+      title: title,
+      subtitle: subtitle,
+      trailing: trailing,
+    );
   }
 
   showLunchTimesList() {
+    const noData = Center(child: Text('Отсутствует информация по перерывам'));
     bool hasLunchTimes = timesheet.lunchTimes.length > 0;
-    final Iterable<ListTile> items = timesheet.lunchTimes.reversed
-        .map((DateTimeInterval interval) => buildListTile(interval));
+    final Iterable<ListTile> items = timesheet.lunchTimes
+        .asMap()
+        .entries
+        .map((var entry) => buildListTile(entry.value, entry.key));
     final List<Widget> divided =
         ListTile.divideTiles(context: context, tiles: items).toList();
-    var content = hasLunchTimes
-        ? ListView(children: divided)
-        : Center(child: Text('Отсутствует информация по перерывам'));
+    final list = ListView(
+      children: divided,
+    );
+    var content = hasLunchTimes ? list : noData;
     showModalBottomSheet(
         context: context,
         builder: (BuildContext builder) {
@@ -142,7 +161,7 @@ class _TimesScreenState extends State<TimesScreen> {
             children: <Widget>[
               Container(
                 child: content,
-                height: getQuarterOfScreen(context),
+                height: getNPartOfScreen(context, 7) * 3,
               )
             ],
           );
@@ -199,8 +218,7 @@ class _TimesScreenState extends State<TimesScreen> {
                     getTimeFromModalBottomSheet(context,
                             initTime: timesheet.arrivalTime)
                         .then((DateTime time) => setState(() {
-                              DateTime arrivalTime = time;
-                              timesheet.arrivalTime = arrivalTime;
+                              timesheet.arrivalTime = time;
                               saveTimesheet();
                             }));
                   },

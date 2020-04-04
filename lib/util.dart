@@ -100,12 +100,13 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
 
 Widget underlineWidget(BuildContext context, {@required Widget child}) =>
     Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).textTheme.body1.color,
-            ),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).textTheme.headline.color,
           ),
         ),
-        child: child);
+      ),
+      child: child,
+    );
