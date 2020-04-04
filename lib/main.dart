@@ -24,6 +24,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'When home',
       home: TimesScreen(title: 'Когда домой?'),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
     );
   }
 }

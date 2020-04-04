@@ -73,12 +73,17 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
             ),
             Container(
               height: getQuarterOfScreen(context),
-              child: CupertinoDatePicker(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                initialDateTime: initTime,
-                onDateTimeChanged: (DateTime value) => time = value,
-                mode: CupertinoDatePickerMode.time,
-                use24hFormat: true,
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  brightness: Theme.of(context).brightness,
+                ),
+                child: CupertinoDatePicker(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  initialDateTime: initTime,
+                  onDateTimeChanged: (DateTime value) => time = value,
+                  mode: CupertinoDatePickerMode.time,
+                  use24hFormat: true,
+                ),
               ),
             )
           ],
@@ -96,5 +101,11 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
 Widget underlineWidget(BuildContext context, {@required Widget child}) =>
     Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide())),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).textTheme.body1.color,
+            ),
+          ),
+        ),
         child: child);
