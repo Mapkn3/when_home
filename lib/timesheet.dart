@@ -1,5 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:when_home/date_time_interval.dart';
 
+part 'timesheet.g.dart';
+
+@JsonSerializable()
 class Timesheet {
   Duration workDuration;
   DateTime arrivalTime;
@@ -34,20 +38,8 @@ class Timesheet {
     }
   }
 
-  Timesheet.fromJson(Map<String, dynamic> json)
-      : workDuration = Duration(milliseconds: json['workDuration']),
-        arrivalTime = DateTime.tryParse(json['arrivalTime']),
-        lunchTimes = List.from(json['lunchTimes']
-            .map((intervalJson) => DateTimeInterval.fromJson(intervalJson))),
-        lastLunchStartTime =
-            DateTime.tryParse(json['lastLunchStartTime'] ?? '');
+  factory Timesheet.fromJson(Map<String, dynamic> json) =>
+      _$TimesheetFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'workDuration': workDuration.inMilliseconds,
-      'arrivalTime': arrivalTime.toString(),
-      'lunchTimes': lunchTimes,
-      'lastLunchStartTime': lastLunchStartTime?.toString()
-    };
-  }
+  Map<String, dynamic> toJson() => _$TimesheetToJson(this);
 }

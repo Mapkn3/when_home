@@ -1,5 +1,10 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'util.dart';
 
+part 'date_time_interval.g.dart';
+
+@JsonSerializable()
 class DateTimeInterval {
   DateTime begin;
   DateTime end;
@@ -8,12 +13,10 @@ class DateTimeInterval {
 
   Duration duration() => end.difference(begin);
 
-  DateTimeInterval.fromJson(Map<String, dynamic> json)
-      : begin = DateTime.tryParse(json['begin']),
-        end = DateTime.tryParse(json['end']);
+  factory DateTimeInterval.fromJson(Map<String, dynamic> json) =>
+      _$DateTimeIntervalFromJson(json);
 
-  Map<String, dynamic> toJson() =>
-      {'begin': begin.toString(), 'end': end.toString()};
+  Map<String, dynamic> toJson() => _$DateTimeIntervalToJson(this);
 
   @override
   String toString() =>
