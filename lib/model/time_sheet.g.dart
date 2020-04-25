@@ -1,32 +1,32 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'timesheet.dart';
+part of 'time_sheet.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Timesheet _$TimesheetFromJson(Map<String, dynamic> json) {
-  return Timesheet(
+TimeSheet _$TimeSheetFromJson(Map<String, dynamic> json) {
+  return TimeSheet(
     workDuration: json['workDuration'] == null
         ? null
         : Duration(microseconds: json['workDuration'] as int),
     arrivalTime: json['arrivalTime'] == null
         ? null
         : DateTime.parse(json['arrivalTime'] as String),
-    lunchTimes: (json['lunchTimes'] as List)
-        ?.map((e) => e == null
-            ? null
-            : DateTimeInterval.fromJson(e as Map<String, dynamic>))
+    breaks: (json['breaks'] as List)
+        ?.map(
+            (e) => e == null ? null : Break.fromJson(e as Map<String, dynamic>))
         ?.toList(),
-  )..lastLunchStartTime = json['lastLunchStartTime'] == null
+  )..lastBreakStartTime = json['lastBreakStartTime'] == null
       ? null
-      : DateTime.parse(json['lastLunchStartTime'] as String);
+      : DateTime.parse(json['lastBreakStartTime'] as String);
 }
 
-Map<String, dynamic> _$TimesheetToJson(Timesheet instance) => <String, dynamic>{
+Map<String, dynamic> _$TimeSheetToJson(TimeSheet instance) =>
+    <String, dynamic>{
       'workDuration': instance.workDuration?.inMicroseconds,
       'arrivalTime': instance.arrivalTime?.toIso8601String(),
-      'lunchTimes': instance.lunchTimes,
-      'lastLunchStartTime': instance.lastLunchStartTime?.toIso8601String(),
+      'breaks': instance.breaks,
+      'lastBreakStartTime': instance.lastBreakStartTime?.toIso8601String(),
     };

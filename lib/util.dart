@@ -110,3 +110,14 @@ Widget underlineWidget(BuildContext context, {@required Widget child}) =>
       ),
       child: child,
     );
+
+Widget dividerBorder(BuildContext context, {@required Widget child}) =>
+    Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+        ),
+      ),
+      child: child,
+    );

@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-
-import 'util.dart';
+import 'package:when_home/util.dart';
 
 part 'date_time_interval.g.dart';
 
