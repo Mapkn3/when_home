@@ -23,8 +23,7 @@ TimeSheet _$TimeSheetFromJson(Map<String, dynamic> json) {
       : DateTime.parse(json['lastBreakStartTime'] as String);
 }
 
-Map<String, dynamic> _$TimeSheetToJson(TimeSheet instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$TimeSheetToJson(TimeSheet instance) => <String, dynamic>{
       'workDuration': instance.workDuration?.inMicroseconds,
       'arrivalTime': instance.arrivalTime?.toIso8601String(),
       'breaks': instance.breaks,
