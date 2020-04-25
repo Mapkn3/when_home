@@ -81,19 +81,20 @@ class _TimesScreenState extends State<TimesScreen> {
           switch (result) {
             case '_PopupMenuItem_SetWorkDayDuration':
               getTimeFromModalBottomSheet(context,
-                      initTime: toDateTime(timeSheet.workDuration))
+                  initTime: toDateTime(timeSheet.workDuration))
                   .then((DateTime time) => setState(() {
-                        timeSheet.workDuration = toDuration(time);
-                        saveTimeSheet();
-                      }));
+                timeSheet.workDuration = toDuration(time);
+                saveTimeSheet();
+              }));
               break;
           }
         },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem(
-                  value: '_PopupMenuItem_SetWorkDayDuration',
-                  child: Text('Длительность рабочего дня'))
-            ]);
+        itemBuilder: (BuildContext context) =>
+        <PopupMenuEntry<String>>[
+          const PopupMenuItem(
+              value: '_PopupMenuItem_SetWorkDayDuration',
+              child: Text('Длительность рабочего дня'))
+        ]);
   }
 
   Widget buildListTile(Break _break, int index) {
@@ -136,13 +137,15 @@ class _TimesScreenState extends State<TimesScreen> {
     );
     Widget trailing = GestureDetector(
       child: Icon(Icons.info_outline),
-      onTap: () => {
+      onTap: () =>
+      {
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
-            title: Text('Break Description'),
-            content: Text(_break.description),
-          ),
+          builder: (_) =>
+              AlertDialog(
+                title: Text('Break Description'),
+                content: Text(_break.description),
+              ),
         )
         /*showModalBottomSheet(
           context: context,
@@ -165,10 +168,11 @@ class _TimesScreenState extends State<TimesScreen> {
     return Dismissible(
       key: Key(listTile.toString()),
       child: listTile,
-      onDismissed: (direction) => setState(() {
-        timeSheet.breaks.removeAt(index);
-        saveTimeSheet();
-      }),
+      onDismissed: (direction) =>
+          setState(() {
+            timeSheet.breaks.removeAt(index);
+            saveTimeSheet();
+          }),
       background: Container(
         color: Colors.red,
         alignment: Alignment.centerRight,
@@ -190,7 +194,7 @@ class _TimesScreenState extends State<TimesScreen> {
           .entries
           .map((var entry) => buildListTile(entry.value, entry.key));
       final List<Widget> divided =
-          ListTile.divideTiles(context: context, tiles: items).toList();
+      ListTile.divideTiles(context: context, tiles: items).toList();
       final list = ListView(
         children: divided,
       );
@@ -243,7 +247,10 @@ class _TimesScreenState extends State<TimesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle mainTextStyle = Theme.of(context).textTheme.headline;
+    TextStyle mainTextStyle = Theme
+        .of(context)
+        .textTheme
+        .headline;
     timeSheet = loadTimeSheet();
     validateTimeSheet(timeSheet);
     String currentState = isWork ? 'На перерыв' : 'К работе';
@@ -252,7 +259,9 @@ class _TimesScreenState extends State<TimesScreen> {
         .add(timeSheet.workDuration)
         .add(timeSheet.getTotalLunchTime());
     int dayOverflow =
-        departureDateTime.difference(timeSheet.arrivalTime).inDays;
+        departureDateTime
+            .difference(timeSheet.arrivalTime)
+            .inDays;
 
     return Scaffold(
       appBar: AppBar(
@@ -289,11 +298,11 @@ class _TimesScreenState extends State<TimesScreen> {
                   ),
                   onTap: () {
                     getTimeFromModalBottomSheet(context,
-                            initTime: timeSheet.arrivalTime)
+                        initTime: timeSheet.arrivalTime)
                         .then((DateTime time) => setState(() {
-                              timeSheet.arrivalTime = time;
-                              saveTimeSheet();
-                            }));
+                      timeSheet.arrivalTime = time;
+                      saveTimeSheet();
+                    }));
                   },
                 ),
               ),
@@ -303,7 +312,7 @@ class _TimesScreenState extends State<TimesScreen> {
                 context,
                 child: GestureDetector(
                   child:
-                      Text(formatFullDuration(timeSheet.getTotalLunchTime())),
+                  Text(formatFullDuration(timeSheet.getTotalLunchTime())),
                   onLongPress: showLunchTimesList,
                 ),
               ),
