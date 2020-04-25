@@ -6,9 +6,9 @@ part 'break.g.dart';
 @JsonSerializable()
 class Break {
   DateTimeInterval interval;
-  String description = "Test description";
+  String description;
 
-  Break({this.interval});
+  Break({this.interval, this.description = ''});
 
   factory Break.fromJson(Map<String, dynamic> json) => _$BreakFromJson(json);
 

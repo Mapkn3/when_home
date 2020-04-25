@@ -11,7 +11,8 @@ Break _$BreakFromJson(Map<String, dynamic> json) {
     interval: json['interval'] == null
         ? null
         : DateTimeInterval.fromJson(json['interval'] as Map<String, dynamic>),
-  )..description = json['description'] as String;
+    description: json['description'] as String,
+  );
 }
 
 Map<String, dynamic> _$BreakToJson(Break instance) => <String, dynamic>{
