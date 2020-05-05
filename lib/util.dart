@@ -53,6 +53,9 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
   DateTime time = initTime ?? DateTime.now();
   final result = await showModalBottomSheet(
       context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
       builder: (BuildContext builder) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -110,6 +113,34 @@ Widget underlineWidget(BuildContext context, {@required Widget child}) =>
       ),
       child: child,
     );
+
+Widget textWithAction(String text, {@required void Function() callback}) {
+  IconButton actionButton = IconButton(
+    icon: Icon(Icons.edit),
+    onPressed: callback,
+  );
+  Widget fakeButton = ConstrainedBox(
+    constraints: const BoxConstraints(
+        minWidth: kMinInteractiveDimension,
+        minHeight: kMinInteractiveDimension),
+    child: Padding(
+      padding: actionButton.padding,
+      child: SizedBox(
+        height: actionButton.iconSize,
+        width: actionButton.iconSize,
+      ),
+    ),
+  );
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: <Widget>[
+      fakeButton,
+      Text(text),
+      actionButton,
+    ],
+  );
+}
 
 Widget dividerBorder(BuildContext context, {@required Widget child}) =>
     Container(
