@@ -78,7 +78,7 @@ class _TimesScreenState extends State<TimesScreen> {
   void validateTimeSheet(TimeSheet timeSheet) {
     var now = DateTime.now();
     var departureTime =
-    timeSheet.arrivalTime.add(timeSheet.getTotalLunchTime());
+        timeSheet.arrivalTime.add(timeSheet.getTotalLunchTime());
     if (now.difference(timeSheet.arrivalTime).inDays > 0 &&
         now.isAfter(departureTime)) {
       timeSheet.arrivalTime = now;
@@ -350,7 +350,7 @@ class _TimesScreenState extends State<TimesScreen> {
               StreamBuilder(
                 stream: clock,
                 builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data != Duration()) {
+                  if (snapshot.hasData && snapshot.data.inSeconds > 0) {
                     return Text('+ ${formatFullDuration(snapshot.data)}');
                   } else {
                     return Container();
