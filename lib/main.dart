@@ -197,10 +197,7 @@ class _TimesScreenState extends State<TimesScreen> {
     return Dismissible(
       key: Key(listTile.toString()),
       child: listTile,
-      onDismissed: (direction) => setState(() {
-        timeSheet.breaks.remove(_break);
-        saveTimeSheet();
-      }),
+      onDismissed: (direction) => timeSheet.breaks.remove(_break),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -215,7 +212,7 @@ class _TimesScreenState extends State<TimesScreen> {
     );
   }
 
-  showBreakTimesList() {
+  showBreakTimesList() async {
     loadTimeSheet();
     Widget descriptionTooltip = TextWithIcon(
       icon: Icon(Icons.info_outline),
@@ -284,7 +281,7 @@ class _TimesScreenState extends State<TimesScreen> {
           ],
         );
       },
-    );
+    ).whenComplete(this.saveTimeSheet);
   }
 
   @override
