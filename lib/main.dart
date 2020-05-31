@@ -207,10 +207,10 @@ class _TimesScreenState extends State<TimesScreen> {
     const noData = Center(child: Text('Отсутствует информация по перерывам'));
     Widget content = timeSheet.breaks.isNotEmpty
         ? ListView.builder(
-      itemCount: timeSheet.breaks.length,
-      itemBuilder: (BuildContext context, int index) =>
-          buildListTile(index),
-    )
+            itemCount: timeSheet.breaks.length,
+            itemBuilder: (BuildContext context, int index) =>
+                buildListTile(index),
+          )
         : noData;
     Widget controlPanel = Padding(
       padding: EdgeInsets.all(8.0),
@@ -226,17 +226,6 @@ class _TimesScreenState extends State<TimesScreen> {
         ],
       ),
     );
-    String lastBreakText = timeSheet.lastBreakStartTime == null
-        ? ''
-        : 'Время начала перерыва: ${timeWithShortDate.format(
-        timeSheet.lastBreakStartTime)}';
-    Widget lastBreakStartAt = Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Align(
-        alignment: Alignment.center,
-        child: Text(lastBreakText),
-      ),
-    );
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -246,7 +235,6 @@ class _TimesScreenState extends State<TimesScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            lastBreakStartAt,
             Divider(
               thickness: 2,
               height: 0,
@@ -322,12 +310,11 @@ class _TimesScreenState extends State<TimesScreen> {
                 shortTimeWithShortDate.format(timeSheet.arrivalTime),
                 callback: () {
                   getTimeFromModalBottomSheet(context,
-                      initTime: timeSheet.arrivalTime)
-                      .then((DateTime time) =>
-                      setState(() {
-                        timeSheet.arrivalTime = time;
-                        saveTimeSheet();
-                      }));
+                          initTime: timeSheet.arrivalTime)
+                      .then((DateTime time) => setState(() {
+                            timeSheet.arrivalTime = time;
+                            saveTimeSheet();
+                          }));
                 },
               ),
               Spacer(),
@@ -348,9 +335,7 @@ class _TimesScreenState extends State<TimesScreen> {
               ),
               Spacer(flex: 2),
               Text(
-                  'можно уйти ${dayOverflow > 0 ? '${'после' *
-                      (dayOverflow - 1)}завтра' : ''} в ${shortTimeWithShortDate
-                      .format(departureDateTime)}'),
+                  'можно уйти ${dayOverflow > 0 ? '${'после' * (dayOverflow - 1)}завтра' : ''} в ${shortTimeWithShortDate.format(departureDateTime)}'),
               Spacer(flex: 5),
             ],
           ),
