@@ -10,6 +10,7 @@ import 'model/break.dart';
 import 'model/date_time_interval.dart';
 import 'model/time_sheet.dart';
 import 'util.dart';
+import 'widget/text_with_icon.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,38 +116,14 @@ class _TimesScreenState extends State<TimesScreen> {
     Widget title = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-            child: Container(
-              child: Text(
-                '${timeWithShortDate.format(interval.begin)}',
-                textAlign: TextAlign.center,
-              ),
-            ),
-            flex: 2),
-        Expanded(
-          child: Container(
-            alignment: Alignment.center,
-            child: Text(
-              '-',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-        Expanded(
-            child: Container(
-              child: Text(
-                '${timeWithShortDate.format(interval.end)}',
-                textAlign: TextAlign.center,
-              ),
-            ),
-            flex: 2),
+        Text('${timeWithShortDate.format(interval.begin)}'),
+        Icon(Icons.remove),
+        Text('${timeWithShortDate.format(interval.end)}'),
       ],
     );
-    Widget subtitle = Container(
-      child: Text(
-        'Длительность: ${formatFullDuration(interval.duration())}',
-        textAlign: TextAlign.center,
-      ),
+    Widget subtitle = Text(
+      'Длительность: ${formatFullDuration(interval.duration())}',
+      textAlign: TextAlign.center,
     );
     Widget trailing = GestureDetector(
       child: Icon(Icons.info_outline),
@@ -198,11 +175,10 @@ class _TimesScreenState extends State<TimesScreen> {
     return Dismissible(
       key: Key(listTile.toString()),
       child: listTile,
-      onDismissed: (direction) =>
-          setState(() {
-            timeSheet.breaks.remove(_break);
-            saveTimeSheet();
-          }),
+      onDismissed: (direction) => setState(() {
+        timeSheet.breaks.remove(_break);
+        saveTimeSheet();
+      }),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -219,63 +195,74 @@ class _TimesScreenState extends State<TimesScreen> {
 
   showBreakTimesList() {
     loadTimeSheet();
+    Widget descriptionTooltip = TextWithIcon(
+      icon: Icon(Icons.info_outline),
+      text: Text(' - описание'),
+    );
+
+    Widget removeTooltip = TextWithIcon(
+      icon: Icon(Icons.arrow_back),
+      text: Text(' - удаление'),
+    );
     const noData = Center(child: Text('Отсутствует информация по перерывам'));
-    Widget content = noData;
-    if (timeSheet.breaks != null) {
-      final list = ListView.builder(
-        itemCount: timeSheet.breaks.length,
-        itemBuilder: (BuildContext context, int index) => buildListTile(index),
-      );
-      content = list;
-    }
-    Widget info = Padding(
+    Widget content = timeSheet.breaks.isNotEmpty
+        ? ListView.builder(
+      itemCount: timeSheet.breaks.length,
+      itemBuilder: (BuildContext context, int index) =>
+          buildListTile(index),
+    )
+        : noData;
+    Widget controlPanel = Padding(
       padding: EdgeInsets.all(8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(flex: 2),
-          Icon(Icons.info_outline),
-          Text(' - описание'),
+          descriptionTooltip,
+          removeTooltip,
           Spacer(),
-          Icon(Icons.arrow_back),
-          Text(' - удаление'),
-          Spacer(flex: 2),
+          IconButton(
+            icon: Icon(Icons.alarm_add),
+            onPressed: () {},
+          ),
         ],
       ),
     );
-    Widget lastBreakStartAt = Container();
-    if (timeSheet.lastBreakStartTime != null) {
-      var startTime = timeWithShortDate.format(timeSheet.lastBreakStartTime);
-      lastBreakStartAt = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Align(
-          alignment: Alignment.center,
-          child: Text('Время начала перерыва: $startTime'),
-        ),
-      );
-    }
+    String lastBreakText = timeSheet.lastBreakStartTime == null
+        ? ''
+        : 'Время начала перерыва: ${timeWithShortDate.format(
+        timeSheet.lastBreakStartTime)}';
+    Widget lastBreakStartAt = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Align(
+        alignment: Alignment.center,
+        child: Text(lastBreakText),
+      ),
+    );
     showModalBottomSheet(
-        context: context,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-        ),
-        builder: (BuildContext builder) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              info,
-              lastBreakStartAt,
-              Divider(
-                thickness: 2,
-                height: 0,
-              ),
-              Container(
-                child: content,
-                height: getNPartOfScreen(context, 7) * 3,
-              ),
-            ],
-          );
-        });
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.0)),
+      ),
+      builder: (BuildContext builder) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            lastBreakStartAt,
+            Divider(
+              thickness: 2,
+              height: 0,
+            ),
+            Container(
+              child: content,
+              height: getNPartOfScreen(context, 7) * 3,
+            ),
+            Divider(
+              height: 0,
+            ),
+            controlPanel,
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -345,16 +332,18 @@ class _TimesScreenState extends State<TimesScreen> {
               ),
               Spacer(),
               Text('перерыв занял'),
-              textWithAction(formatFullDuration(timeSheet.getTotalLunchTime()),
-                  callback: showBreakTimesList),
+              textWithAction(
+                formatFullDuration(timeSheet.getTotalLunchTime()),
+                callback: showBreakTimesList,
+              ),
               StreamBuilder(
                 stream: clock,
                 builder: (context, snapshot) {
+                  String duration = '';
                   if (snapshot.hasData && snapshot.data.inSeconds > 0) {
-                    return Text('+ ${formatFullDuration(snapshot.data)}');
-                  } else {
-                    return Container();
+                    duration = '+ ${formatFullDuration(snapshot.data)}';
                   }
+                  return Text(duration);
                 },
               ),
               Spacer(flex: 2),
