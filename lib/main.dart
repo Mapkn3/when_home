@@ -226,19 +226,33 @@ class _TimesScreenState extends State<TimesScreen> {
         ],
       ),
     );
+    double borderRadiusValue = 24.0;
+    Widget header = Container(
+      constraints: BoxConstraints.tightFor(height: borderRadiusValue),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints.tight(
+            Size(MediaQuery.of(context).size.width / 6, 4.0),
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2.0),
+            color: Colors.white70,
+          ),
+        ),
+      ),
+    );
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.0)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(borderRadiusValue),
+        ),
       ),
       builder: (BuildContext builder) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Divider(
-              thickness: 2,
-              height: 0,
-            ),
+            header,
             Container(
               child: content,
               height: getNPartOfScreen(context, 7) * 3,
@@ -318,7 +332,7 @@ class _TimesScreenState extends State<TimesScreen> {
                 },
               ),
               Spacer(),
-              Text('перерыв занял'),
+              Text('общее время перерывов'),
               textWithAction(
                 formatFullDuration(timeSheet.getTotalLunchTime()),
                 callback: showBreakTimesList,
