@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +10,7 @@ import 'model/date_time_interval.dart';
 import 'model/time_sheet.dart';
 import 'util.dart';
 import 'widget/text_with_icon.dart';
+import 'widget/widget_with_action.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,13 +67,13 @@ class _TimesScreenState extends State<TimesScreen> {
         "breaks": []
     }
     ''';
-    String timeSheetJson = prefs.getString('timesheet') ?? defaultTimeSheet;
+    String timeSheetJson = prefs.getString('timeSheet') ?? defaultTimeSheet;
     Map timeSheetMap = jsonDecode(timeSheetJson);
     return TimeSheet.fromJson(timeSheetMap);
   }
 
   void saveTimeSheet() {
-    prefs.setString('timesheet', jsonEncode(timeSheet));
+    prefs.setString('timeSheet', jsonEncode(timeSheet));
   }
 
   void validateTimeSheet(TimeSheet timeSheet) {
@@ -113,12 +113,31 @@ class _TimesScreenState extends State<TimesScreen> {
   Widget buildListTile(int index) {
     Break _break = timeSheet.breaks[index];
     DateTimeInterval interval = _break.interval;
-    Widget title = Row(
+    Widget description = _break.description.isEmpty
+        ? Container()
+        : Flex(
+            direction: Axis.vertical,
+            children: [
+              Text(
+                _break.description,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Divider(),
+            ],
+          );
+    Widget timeInterval = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text('${timeWithShortDate.format(interval.begin)}'),
         Icon(Icons.remove),
         Text('${timeWithShortDate.format(interval.end)}'),
+      ],
+    );
+    Widget title = Column(
+      children: <Widget>[
+        description,
+        timeInterval,
       ],
     );
     Widget subtitle = Text(
@@ -131,7 +150,7 @@ class _TimesScreenState extends State<TimesScreen> {
         showDialog(
           barrierDismissible: false,
           context: context,
-          builder: (_) {
+          builder: (BuildContext context) {
             textEditingController.text = timeSheet.breaks[index].description;
             return AlertDialog(
               title: Text('Описание'),
@@ -139,7 +158,7 @@ class _TimesScreenState extends State<TimesScreen> {
                 controller: textEditingController,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
-                decoration: InputDecoration(border: OutlineInputBorder()),
+                decoration: InputDecoration(border: UnderlineInputBorder()),
               ),
               actions: [
                 FlatButton(
@@ -156,6 +175,8 @@ class _TimesScreenState extends State<TimesScreen> {
                     saveTimeSheet();
                     textEditingController.clear();
                     Navigator.pop(context);
+                    Navigator.pop(context);
+                    showBreakTimesList();
                   },
                   child: Text('Сохранить'),
                 ),
@@ -166,6 +187,7 @@ class _TimesScreenState extends State<TimesScreen> {
       },
     );
     Widget listTile = Card(
+      margin: EdgeInsets.all(2.0),
       child: ListTile(
         title: title,
         subtitle: subtitle,
@@ -205,13 +227,13 @@ class _TimesScreenState extends State<TimesScreen> {
       text: Text(' - удаление'),
     );
     const noData = Center(child: Text('Отсутствует информация по перерывам'));
-    Widget content = timeSheet.breaks.isNotEmpty
-        ? ListView.builder(
+    Widget content = timeSheet.breaks.isEmpty
+        ? noData
+        : ListView.builder(
             itemCount: timeSheet.breaks.length,
             itemBuilder: (BuildContext context, int index) =>
                 buildListTile(index),
-          )
-        : noData;
+          );
     Widget controlPanel = Padding(
       padding: EdgeInsets.all(8.0),
       child: Row(
@@ -250,12 +272,10 @@ class _TimesScreenState extends State<TimesScreen> {
       ),
       builder: (BuildContext builder) {
         return Column(
-          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             header,
-            Container(
+            Flexible(
               child: content,
-              height: getNPartOfScreen(context, 7) * 3,
             ),
             Divider(
               height: 0,
@@ -320,8 +340,9 @@ class _TimesScreenState extends State<TimesScreen> {
             children: <Widget>[
               Spacer(flex: 5),
               Text('прибытие на работу'),
-              textWithAction(
-                shortTimeWithShortDate.format(timeSheet.arrivalTime),
+              WidgetWithAction(
+                widget:
+                    Text(shortTimeWithShortDate.format(timeSheet.arrivalTime)),
                 callback: () {
                   getTimeFromModalBottomSheet(context,
                           initTime: timeSheet.arrivalTime)
@@ -333,8 +354,8 @@ class _TimesScreenState extends State<TimesScreen> {
               ),
               Spacer(),
               Text('общее время перерывов'),
-              textWithAction(
-                formatFullDuration(timeSheet.getTotalLunchTime()),
+              WidgetWithAction(
+                widget: Text(formatFullDuration(timeSheet.getTotalLunchTime())),
                 callback: showBreakTimesList,
               ),
               StreamBuilder(
