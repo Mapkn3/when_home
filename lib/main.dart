@@ -110,6 +110,13 @@ class _TimesScreenState extends State<TimesScreen> {
             ]);
   }
 
+  void refreshBreaksModalBottomSheet() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+    showBreakTimesList();
+  }
+
   Widget buildListTile(int index) {
     Break _break = timeSheet.breaks[index];
     DateTimeInterval interval = _break.interval;
@@ -153,6 +160,9 @@ class _TimesScreenState extends State<TimesScreen> {
           builder: (BuildContext context) {
             textEditingController.text = timeSheet.breaks[index].description;
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+              ),
               title: Text('Описание'),
               content: TextField(
                 controller: textEditingController,
@@ -175,8 +185,7 @@ class _TimesScreenState extends State<TimesScreen> {
                     saveTimeSheet();
                     textEditingController.clear();
                     Navigator.pop(context);
-                    Navigator.pop(context);
-                    showBreakTimesList();
+                    refreshBreaksModalBottomSheet();
                   },
                   child: Text('Сохранить'),
                 ),
@@ -197,7 +206,7 @@ class _TimesScreenState extends State<TimesScreen> {
     return Dismissible(
       key: Key(listTile.toString()),
       child: listTile,
-      onDismissed: (direction) => timeSheet.breaks.remove(_break),
+      onDismissed: (direction) => timeSheet.removeBreak(_break),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -216,12 +225,12 @@ class _TimesScreenState extends State<TimesScreen> {
     loadTimeSheet();
     Widget descriptionTooltip = TextWithIcon(
       icon: Icon(Icons.info_outline),
-      text: Text(' - описание'),
+      text: Text('- описание'),
     );
 
     Widget removeTooltip = TextWithIcon(
       icon: Icon(Icons.arrow_back),
-      text: Text(' - удаление'),
+      text: Text('- удаление'),
     );
     const noData = Center(child: Text('Отсутствует информация по перерывам'));
     Widget content = timeSheet.breaks.isEmpty
@@ -240,7 +249,19 @@ class _TimesScreenState extends State<TimesScreen> {
           Spacer(),
           IconButton(
             icon: Icon(Icons.alarm_add),
-            onPressed: () {},
+            onPressed: () {
+              getDateTimeInterval(context).then(
+                (interval) {
+                  if (interval != null) {
+                    setState(() {
+                      timeSheet.addBreakByDateTimeInterval(interval);
+                    });
+                    saveTimeSheet();
+                    refreshBreaksModalBottomSheet();
+                  }
+                },
+              );
+            },
           ),
         ],
       ),
@@ -281,7 +302,11 @@ class _TimesScreenState extends State<TimesScreen> {
           ],
         );
       },
-    ).whenComplete(this.saveTimeSheet);
+    ).whenComplete(() {
+      setState(() {
+        saveTimeSheet();
+      });
+    });
   }
 
   @override

@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+
+import 'model/date_time_interval.dart';
 
 String _datePattern = 'dd.MM.yyyy';
 String _shortDatePattern = 'dd.MM';
@@ -62,13 +65,12 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
           children: <Widget>[
             Row(
               children: <Widget>[
-                CupertinoButton(
-                    child: Text('Cancel'),
-                    onPressed: () {
-                      return Navigator.pop(context, cancel);
-                    }),
+                FlatButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.pop(context, cancel),
+                ),
                 Spacer(),
-                CupertinoButton(
+                FlatButton(
                   child: Text('OK'),
                   onPressed: () => Navigator.pop(context, ok),
                 ),
@@ -98,5 +100,114 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
     case cancel:
     default:
       return initTime;
+  }
+}
+
+Future<DateTimeInterval> getDateTimeInterval(BuildContext context) async {
+  DateTime now = DateTime.now();
+  DateTime begin = DateTime(now.year, now.month, now.day);
+  DateTime end = DateTime(now.year, now.month, now.day);
+
+  const ok = '_getInterval_ok';
+  const cancel = '_getInterval_cancel';
+  final result = await showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (BuildContext builder) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                FlatButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.pop(context, cancel),
+                ),
+                Spacer(),
+                FlatButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    if (begin.isAfter(end) || begin.isAtSameMomentAs(end)) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
+                            ),
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              24.0,
+                              20.0,
+                              24.0,
+                              8.0,
+                            ),
+                            content: Text(
+                              'Время начала должно быть раньше времени окончания',
+                            ),
+                            actions: [
+                              IconButton(
+                                icon: Icon(Icons.check),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      Navigator.pop(context, ok);
+                    }
+                  },
+                ),
+              ],
+            ),
+            Container(
+              height: getQuarterOfScreen(context),
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  brightness: CupertinoTheme.brightnessOf(context),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Flexible(
+                      child: CupertinoDatePicker(
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        initialDateTime: begin,
+                        onDateTimeChanged: (DateTime value) => begin = value,
+                        mode: CupertinoDatePickerMode.time,
+                        use24hFormat: true,
+                      ),
+                    ),
+                    Icon(
+                      Icons.remove,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                    Flexible(
+                      child: CupertinoDatePicker(
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        initialDateTime: end,
+                        onDateTimeChanged: (DateTime value) => end = value,
+                        mode: CupertinoDatePickerMode.time,
+                        use24hFormat: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
+        );
+      });
+  switch (result) {
+    case ok:
+      return DateTimeInterval(begin: begin, end: end);
+    case cancel:
+    default:
+      return null;
   }
 }

@@ -21,12 +21,21 @@ class TimeSheet {
     return lunchTime;
   }
 
-  void addBreak(Duration duration) {
+  void removeBreak(Break b) {
+    assert(b != null);
+    breaks.remove(b);
+  }
+
+  void addBreakByDateTimeInterval(DateTimeInterval interval) {
+    assert(interval != null);
+    breaks.add(Break(interval: interval));
+  }
+
+  void addBreakByDuration(Duration duration) {
+    assert(duration != null);
     DateTime end = DateTime.now();
     DateTime begin = end.subtract(duration);
-    breaks.add(Break(
-      interval: DateTimeInterval(begin: begin, end: end),
-    ));
+    this.addBreakByDateTimeInterval(DateTimeInterval(begin: begin, end: end));
   }
 
   void startBreak() {
@@ -37,9 +46,8 @@ class TimeSheet {
     if (lastBreakStartTime != null) {
       DateTime now = DateTime.now();
       breaks ??= new List();
-      breaks.add(Break(
-        interval: DateTimeInterval(begin: lastBreakStartTime, end: now),
-      ));
+      this.addBreakByDateTimeInterval(
+          DateTimeInterval(begin: lastBreakStartTime, end: now));
       lastBreakStartTime = null;
     }
   }

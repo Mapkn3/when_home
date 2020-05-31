@@ -20,7 +20,10 @@ class TextWithIcon extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         direction: Axis.horizontal,
         children: [
-          icon,
+          Padding(
+            padding: EdgeInsets.all(4.0),
+            child: icon,
+          ),
           text,
         ],
       ),
