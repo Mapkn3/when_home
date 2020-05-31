@@ -66,13 +66,13 @@ Future<DateTime> getTimeFromModalBottomSheet(BuildContext context,
             Row(
               children: <Widget>[
                 FlatButton(
-                  child: Text('Cancel'),
-                  onPressed: () => Navigator.pop(context, cancel),
+                  child: Text('ОК'),
+                  onPressed: () => Navigator.pop(context, ok),
                 ),
                 Spacer(),
                 FlatButton(
-                  child: Text('OK'),
-                  onPressed: () => Navigator.pop(context, ok),
+                  child: Text('Отмена'),
+                  onPressed: () => Navigator.pop(context, cancel),
                 ),
               ],
             ),
@@ -122,12 +122,7 @@ Future<DateTimeInterval> getDateTimeInterval(BuildContext context) async {
             Row(
               children: <Widget>[
                 FlatButton(
-                  child: Text('Cancel'),
-                  onPressed: () => Navigator.pop(context, cancel),
-                ),
-                Spacer(),
-                FlatButton(
-                  child: Text('OK'),
+                  child: Text('ОК'),
                   onPressed: () {
                     if (begin.isAfter(end) || begin.isAtSameMomentAs(end)) {
                       showDialog(
@@ -161,6 +156,11 @@ Future<DateTimeInterval> getDateTimeInterval(BuildContext context) async {
                       Navigator.pop(context, ok);
                     }
                   },
+                ),
+                Spacer(),
+                FlatButton(
+                  child: Text('Отмена'),
+                  onPressed: () => Navigator.pop(context, cancel),
                 ),
               ],
             ),
