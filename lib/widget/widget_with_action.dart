@@ -8,7 +8,7 @@ class WidgetWithAction extends StatelessWidget {
         assert(callback != null);
 
   final Widget widget;
-  final void Function() callback;
+  final VoidCallback callback;
 
   @override
   Widget build(BuildContext context) {
