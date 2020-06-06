@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:when_home/service/time_sheet_service.dart';
 
 import 'model/break.dart';
 import 'model/date_time_interval.dart';
-import 'model/time_sheet.dart';
 import 'util.dart';
 import 'widget/text_with_icon.dart';
 import 'widget/widget_with_action.dart';
@@ -16,6 +15,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   GetIt.I.registerSingleton<SharedPreferences>(sharedPreferences);
+  TimeSheetService timeSheetService = new TimeSheetService();
+  GetIt.I.registerSingleton<TimeSheetService>(timeSheetService);
 
   runApp(MyApp());
 }
@@ -44,9 +45,8 @@ class TimesScreen extends StatefulWidget {
 }
 
 class _TimesScreenState extends State<TimesScreen> {
-  TimeSheet timeSheet;
   bool isWork = true;
-  SharedPreferences prefs = GetIt.I.get<SharedPreferences>();
+  TimeSheetService _timeSheetService = GetIt.I.get<TimeSheetService>();
   final textEditingController = TextEditingController();
   Stream<Duration> clock = Stream.empty();
 
@@ -56,48 +56,15 @@ class _TimesScreenState extends State<TimesScreen> {
     super.dispose();
   }
 
-  TimeSheet loadTimeSheet() {
-    DateTime date = DateTime.now();
-    DateTime defaultArrivalTime = DateTime(date.year, date.month, date.day);
-    Duration defaultWorkDuration = Duration(hours: 8);
-    String defaultTimeSheet = '''
-    {
-        "workDuration": ${defaultWorkDuration.inMicroseconds},
-        "arrivalTime": "${defaultArrivalTime.toIso8601String()}",
-        "breaks": []
-    }
-    ''';
-    String timeSheetJson = prefs.getString('timeSheet') ?? defaultTimeSheet;
-    Map timeSheetMap = jsonDecode(timeSheetJson);
-    return TimeSheet.fromJson(timeSheetMap);
-  }
-
-  void saveTimeSheet() {
-    prefs.setString('timeSheet', jsonEncode(timeSheet));
-  }
-
-  void validateTimeSheet(TimeSheet timeSheet) {
-    var now = DateTime.now();
-    var departureTime =
-        timeSheet.arrivalTime.add(timeSheet.getTotalLunchTime());
-    if (now.difference(timeSheet.arrivalTime).inDays > 0 &&
-        now.isAfter(departureTime)) {
-      timeSheet.arrivalTime = now;
-      timeSheet.lastBreakStartTime = null;
-      timeSheet.breaks = [];
-    }
-  }
-
   Widget getPopupMenuButton() {
     return PopupMenuButton<String>(
         onSelected: (String result) {
           switch (result) {
             case '_PopupMenuItem_SetWorkDayDuration':
               getTimeFromModalBottomSheet(context,
-                      initTime: toDateTime(timeSheet.workDuration))
+                      initTime: toDateTime(_timeSheetService.workDuration))
                   .then((DateTime time) => setState(() {
-                        timeSheet.workDuration = toDuration(time);
-                        saveTimeSheet();
+                        _timeSheetService.workDuration = toDuration(time);
                       }));
               break;
           }
@@ -118,7 +85,7 @@ class _TimesScreenState extends State<TimesScreen> {
   }
 
   Widget buildListTile(int index) {
-    Break _break = timeSheet.breaks[index];
+    Break _break = _timeSheetService.getBreakByIndex(index);
     DateTimeInterval interval = _break.interval;
     Widget description = _break.description.isEmpty
         ? Container()
@@ -158,7 +125,8 @@ class _TimesScreenState extends State<TimesScreen> {
           barrierDismissible: false,
           context: context,
           builder: (BuildContext context) {
-            textEditingController.text = timeSheet.breaks[index].description;
+            textEditingController.text =
+                _timeSheetService.getBreakDescriptionByIndex(index);
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8.0)),
@@ -180,9 +148,9 @@ class _TimesScreenState extends State<TimesScreen> {
                 ),
                 FlatButton(
                   onPressed: () {
-                    timeSheet.breaks[index].description =
-                        textEditingController.text;
-                    saveTimeSheet();
+                    _timeSheetService.setBreakDescriptionByIndex(
+                        index, textEditingController.text);
+                    _timeSheetService.saveTimeSheet();
                     textEditingController.clear();
                     Navigator.pop(context);
                     refreshBreaksModalBottomSheet();
@@ -206,7 +174,7 @@ class _TimesScreenState extends State<TimesScreen> {
     return Dismissible(
       key: Key(listTile.toString()),
       child: listTile,
-      onDismissed: (direction) => timeSheet.removeBreak(_break),
+      onDismissed: (direction) => _timeSheetService.removeBreak(_break),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -222,7 +190,7 @@ class _TimesScreenState extends State<TimesScreen> {
   }
 
   showBreakTimesList() async {
-    loadTimeSheet();
+    _timeSheetService.loadTimeSheet();
     Widget descriptionTooltip = TextWithIcon(
       icon: Icon(Icons.info_outline),
       text: Text('- описание'),
@@ -233,10 +201,10 @@ class _TimesScreenState extends State<TimesScreen> {
       text: Text('- удаление'),
     );
     const noData = Center(child: Text('Отсутствует информация по перерывам'));
-    Widget content = timeSheet.breaks.isEmpty
+    Widget content = _timeSheetService.isEmptyBreaks()
         ? noData
         : ListView.builder(
-            itemCount: timeSheet.breaks.length,
+            itemCount: _timeSheetService.countOfBreaks(),
             itemBuilder: (BuildContext context, int index) =>
                 buildListTile(index),
           );
@@ -254,9 +222,9 @@ class _TimesScreenState extends State<TimesScreen> {
                 (interval) {
                   if (interval != null) {
                     setState(() {
-                      timeSheet.addBreakByDateTimeInterval(interval);
+                      _timeSheetService.addBreakByDateTimeInterval(interval);
                     });
-                    saveTimeSheet();
+                    _timeSheetService.saveTimeSheet();
                     refreshBreaksModalBottomSheet();
                   }
                 },
@@ -304,7 +272,7 @@ class _TimesScreenState extends State<TimesScreen> {
       },
     ).whenComplete(() {
       setState(() {
-        saveTimeSheet();
+        _timeSheetService.saveTimeSheet();
       });
     });
   }
@@ -312,15 +280,12 @@ class _TimesScreenState extends State<TimesScreen> {
   @override
   Widget build(BuildContext context) {
     TextStyle mainTextStyle = Theme.of(context).textTheme.headline;
-    timeSheet = loadTimeSheet();
-    validateTimeSheet(timeSheet);
+    _timeSheetService.loadTimeSheet();
     String currentState = isWork ? 'На перерыв' : 'К работе';
 
-    DateTime departureDateTime = timeSheet.arrivalTime
-        .add(timeSheet.workDuration)
-        .add(timeSheet.getTotalLunchTime());
+    DateTime departureDateTime = _timeSheetService.calculateDepartureDateTime();
     int dayOverflow =
-        departureDateTime.difference(timeSheet.arrivalTime).inDays;
+        departureDateTime.difference(_timeSheetService.getArrivalTime()).inDays;
 
     return Scaffold(
       appBar: AppBar(
@@ -335,19 +300,15 @@ class _TimesScreenState extends State<TimesScreen> {
           onPressed: () {
             if (isWork) {
               clock = Stream.periodic(Duration(seconds: 1), (tick) {
-                if (this.timeSheet.lastBreakStartTime != null) {
-                  return this
-                      .timeSheet
-                      .lastBreakStartTime
-                      .add(Duration(seconds: tick + 1))
-                      .difference(this.timeSheet.lastBreakStartTime);
-                } else {
-                  return Duration();
-                }
+                int currentBreakDurationInSeconds =
+                    this._timeSheetService.isBreakTime() ? tick + 1 : 0;
+                return Duration(seconds: currentBreakDurationInSeconds);
               });
             }
-            isWork ? timeSheet.startBreak() : timeSheet.endBreak();
-            saveTimeSheet();
+            isWork
+                ? _timeSheetService.startBreak()
+                : _timeSheetService.stopBreak();
+            _timeSheetService.saveTimeSheet();
             setState(() {
               isWork = !isWork;
             });
@@ -363,21 +324,22 @@ class _TimesScreenState extends State<TimesScreen> {
               Spacer(flex: 5),
               Text('прибытие на работу'),
               WidgetWithAction(
-                widget:
-                    Text(shortTimeWithShortDate.format(timeSheet.arrivalTime)),
+                widget: Text(shortTimeWithShortDate
+                    .format(_timeSheetService.getArrivalTime())),
                 callback: () {
                   getTimeFromModalBottomSheet(context,
-                          initTime: timeSheet.arrivalTime)
+                          initTime: _timeSheetService.getArrivalTime())
                       .then((DateTime time) => setState(() {
-                            timeSheet.arrivalTime = time;
-                            saveTimeSheet();
+                            _timeSheetService.setArrivalTime(time);
+                            _timeSheetService.saveTimeSheet();
                           }));
                 },
               ),
               Spacer(),
               Text('общее время перерывов'),
               WidgetWithAction(
-                widget: Text(formatFullDuration(timeSheet.getTotalLunchTime())),
+                widget: Text(formatFullDuration(
+                    _timeSheetService.getTotalBreakDuration())),
                 callback: showBreakTimesList,
               ),
               StreamBuilder(

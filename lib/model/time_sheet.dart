@@ -13,12 +13,20 @@ class TimeSheet {
 
   TimeSheet({this.workDuration, this.arrivalTime, this.breaks});
 
-  Duration getTotalLunchTime() {
-    Duration lunchTime = Duration.zero;
+  Duration getTotalBreakDuration() {
+    Duration breakTime = Duration.zero;
     breaks
         ?.map((_break) => _break.interval.duration())
-        ?.forEach((time) => lunchTime += time);
-    return lunchTime;
+        ?.forEach((time) => breakTime += time);
+    return breakTime;
+  }
+
+  bool isEmptyBreaks() {
+    return breaks.isEmpty;
+  }
+
+  int countOfBreaks() {
+    return breaks.length;
   }
 
   void removeBreak(Break b) {
@@ -42,7 +50,7 @@ class TimeSheet {
     lastBreakStartTime = DateTime.now();
   }
 
-  void endBreak() {
+  void stopBreak() {
     if (lastBreakStartTime != null) {
       DateTime now = DateTime.now();
       breaks ??= new List();
@@ -50,6 +58,10 @@ class TimeSheet {
           DateTimeInterval(begin: lastBreakStartTime, end: now));
       lastBreakStartTime = null;
     }
+  }
+
+  bool isBreakTime() {
+    return lastBreakStartTime != null;
   }
 
   factory TimeSheet.fromJson(Map<String, dynamic> json) =>
