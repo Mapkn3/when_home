@@ -115,7 +115,7 @@ class _TimesScreenState extends State<TimesScreen> {
       ],
     );
     Widget subtitle = Text(
-      'Длительность: ${formatFullDuration(interval.duration())}',
+      'Длительность: ${formatFullDuration(interval.duration)}',
       textAlign: TextAlign.center,
     );
     Widget trailing = GestureDetector(

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:when_home/util.dart';
 
@@ -8,9 +9,9 @@ class DateTimeInterval {
   DateTime begin;
   DateTime end;
 
-  DateTimeInterval({this.begin, this.end});
+  DateTimeInterval({@required this.begin, @required this.end});
 
-  Duration duration() => end.difference(begin);
+  Duration get duration => end.difference(begin);
 
   factory DateTimeInterval.fromJson(Map<String, dynamic> json) =>
       _$DateTimeIntervalFromJson(json);
@@ -19,5 +20,5 @@ class DateTimeInterval {
 
   @override
   String toString() =>
-      '${dateWithTime.format(begin)} - ${dateWithTime.format(begin)}';
+      '${dateWithTime.format(begin)} - ${dateWithTime.format(end)}';
 }

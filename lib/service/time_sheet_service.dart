@@ -35,7 +35,7 @@ class TimeSheetService {
 
   void prepareTimeSheet() {
     DateTime now = DateTime.now();
-    Duration totalBreakTime = _timeSheet.getTotalBreakDuration();
+    Duration totalBreakTime = _timeSheet.totalBreakDuration;
     DateTime departureTime = _timeSheet.arrivalTime.add(totalBreakTime);
     if (now.difference(_timeSheet.arrivalTime).inDays > 0 &&
         now.isAfter(departureTime)) {
@@ -94,7 +94,7 @@ class TimeSheetService {
   DateTime calculateDepartureDateTime() {
     return _timeSheet.arrivalTime
         .add(_timeSheet.workDuration)
-        .add(_timeSheet.getTotalBreakDuration());
+        .add(_timeSheet.totalBreakDuration);
   }
 
   bool isBreakTime() {
@@ -110,6 +110,6 @@ class TimeSheetService {
   }
 
   Duration getTotalBreakDuration() {
-    return _timeSheet.getTotalBreakDuration();
+    return _timeSheet.totalBreakDuration;
   }
 }

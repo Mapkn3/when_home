@@ -211,3 +211,10 @@ Future<DateTimeInterval> getDateTimeInterval(BuildContext context) async {
       return null;
   }
 }
+
+mergeString(String first, String second, String separator) {
+  String s1 = first ?? '';
+  String s2 = second ?? '';
+  String sep = separator ?? ' ';
+  return s1 + (s1.isNotEmpty && s2.isNotEmpty ? sep : '') + s2;
+}
