@@ -43,8 +43,8 @@ class TimeSheet {
     } else {
       for (int i = 0; i < breaks.length; i++) {
         currentInterval = breaks[i].interval;
-        bool beginIsBeforeBegin = interval.begin.isBefore(
-            currentInterval.begin);
+        bool beginIsBeforeBegin =
+            interval.begin.isBefore(currentInterval.begin);
         bool endIsBeforeBegin = interval.end.isBefore(currentInterval.begin);
         bool beginIsAfterEnd = interval.begin.isAfter(currentInterval.end);
         bool endIsAfterEnd = interval.end.isAfter(currentInterval.end);
@@ -73,7 +73,8 @@ class TimeSheet {
         i++;
       } else {
         prev.interval.end = current.interval.end;
-        prev.description = mergeString(prev.description, current.description, '\n');
+        prev.description =
+            mergeString(prev.description, current.description, '\n');
         breaks.removeAt(i);
       }
     }
@@ -93,7 +94,7 @@ class TimeSheet {
   void stopBreak() {
     if (lastBreakStartTime != null) {
       DateTime now = DateTime.now();
-      breaks ??= new List();
+      breaks ??= [];
       this.addBreakByDateTimeInterval(
           DateTimeInterval(begin: lastBreakStartTime, end: now));
       lastBreakStartTime = null;

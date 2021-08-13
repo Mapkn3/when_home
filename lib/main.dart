@@ -139,14 +139,14 @@ class _TimesScreenState extends State<TimesScreen> {
                 decoration: InputDecoration(border: UnderlineInputBorder()),
               ),
               actions: [
-                FlatButton(
+                TextButton(
                   onPressed: () {
                     textEditingController.clear();
                     Navigator.pop(context);
                   },
                   child: Text('Отмена'),
                 ),
-                FlatButton(
+                TextButton(
                   onPressed: () {
                     _timeSheetService.setBreakDescriptionByIndex(
                         index, textEditingController.text);
@@ -279,7 +279,7 @@ class _TimesScreenState extends State<TimesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle mainTextStyle = Theme.of(context).textTheme.headline;
+    TextStyle mainTextStyle = Theme.of(context).textTheme.headline5;
     _timeSheetService.loadTimeSheet();
     String currentState = isWork ? 'На перерыв' : 'К работе';
 
