@@ -16,7 +16,7 @@ class Underline extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: color ?? Theme.of(context).textTheme.headline.color,
+            color: color ?? Theme.of(context).textTheme.headline5.color,
           ),
         ),
       ),
